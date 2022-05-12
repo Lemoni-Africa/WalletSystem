@@ -1,1 +1,1 @@
-web: vendor/bin/heroku-php-apache2 public/ -l log/error.log
+web: vendor/bin/heroku-php-apache2 public/
