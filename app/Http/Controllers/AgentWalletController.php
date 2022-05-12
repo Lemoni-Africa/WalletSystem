@@ -117,6 +117,7 @@ class AgentWalletController extends Controller
         try {
             if ($request->hasHeader('x-payout-signature')) {
                 $payoutSignature = $request->header('x-payout-signature');
+                $request->headers->set('Content-Type', 'application/json');
                 // $jsonEncodedPayload = json_encode($request->all());
                 $hashedPayload = hash_hmac("sha512", json_encode($request->all()) , $this->callBackSecret);
                 Log::info($hashedPayload);
