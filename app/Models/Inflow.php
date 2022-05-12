@@ -32,6 +32,7 @@ class Inflow extends Model
     {
         $this->customerId = $request->customerId;
         $this->request_amount = $request->amount;
+        $this->callback_url = $request->callbackUrl;
         // $this->received_amount = $data['received_amount'];
         $this->accountNumber = $data['accountNumber'];
         $this->accountName = $data['accountName'];
@@ -61,9 +62,9 @@ class Inflow extends Model
             'transactionId' => $request->transactionId,
             'walletAccountNumber' => $request->walletAccountNumber,
             'time_of_verification' => Carbon::now(),
-            'status' => TransactionStatus::FAILED->value,
+            'status' => TransactionStatus::FAILED->value
         ];
-       DB::table('inflows')->where('reference', $request->reference)->update($updateDetails);
+        DB::table('inflows')->where('reference', $request->reference)->where('accountNumber', $request->walletNumber)->update($updateDetails);
     }
 
     public function updateFromCallBackForSuccessfulTransaction($request)
@@ -83,7 +84,16 @@ class Inflow extends Model
             'time_of_verification' => Carbon::now(),
             'status' => TransactionStatus::COMPLETED->value,
         ];
-       DB::table('inflows')->where('reference', $request->reference)->update($updateDetails);
+       DB::table('inflows')->where('reference', $request->reference)->where('accountNumber', $request->walletNumber)->update($updateDetails);
+              
+    }
+
+    public function saveResponse($request, $response)
+    {
+        $updateDetails = [
+            'application_response' => json_encode($response)
+        ];
+        DB::table('inflows')->where('reference', $request->reference)->where('accountNumber', $request->walletNumber)->update($updateDetails);
               
     }
 }

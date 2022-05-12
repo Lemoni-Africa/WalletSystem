@@ -30,9 +30,10 @@ Route::group(array('prefix' => 'payout' ), function () {
 
 Route::group(array('prefix' => 'wallet' ), function () {
     Route::post('createWallet', [AgentWalletController::class, 'createWallet']);
-    Route::post('getMerchantPeer', [AgentWalletController::class, 'getMerchantPeer']);
+    Route::post('getWallet', [AgentWalletController::class, 'getMerchantPeer']);
     Route::get('getMerchantBalance', [AgentWalletController::class, 'getMerchantBalance']);
     Route::post('fundingCallBack', [AgentWalletController::class, 'fundingCallBack']);
+    Route::post('alert', [AgentWalletController::class, 'alertUrl']);
 });
 
 

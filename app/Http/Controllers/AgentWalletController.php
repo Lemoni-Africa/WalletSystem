@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Contract\Responses\DefaultApiResponse;
+use App\Http\Requests\AlertRequest;
 use App\Http\Requests\ChakraCallBackRequest;
 use App\Http\Requests\CreateWalletRequest;
 use App\Http\Requests\MerchantPayRequest;
@@ -72,6 +73,7 @@ class AgentWalletController extends Controller
             $this->response->data = [
                 "accountNumber" => $walletGenerated['accountNumber'],
                 "accountName" => $walletGenerated['accountName'],
+                "reference" => $walletGenerated['reference'],
                 "bankName" => $walletGenerated['bankName'],
                 "bankCode" => $walletGenerated['bankCode']
             ];
@@ -129,25 +131,38 @@ class AgentWalletController extends Controller
                     $this->response->message = "Invalid Signature";                    
                     return response()->json($this->response, 401);
                 }else{
+                    
                     $inflow = new Inflow();
-                    $fromDb = findInFlowbyReference($request->reference);
+                    $fromDb = findInFlowbyReference($request->reference,$request->walletAccountNumber);
                     if (!empty($fromDb)) {
+                        $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
+                        Log::info('************response from application************' .  $response);
+                        $inflow->saveResponse($request, $response);
+                        if ($response->successful())
+                        {
                         if ($request->success) {
-                        //update DB to be successful
-                        $inflow->updateFromCallBackForSuccessfulTransaction($request);
-                        return  response([
-                            'responseCode' => "00",
-                            'responseMessage' => "Callback received"
-                        ], 200);
-                        } else {
-                            $inflow->updateFromCallBackForFailedTransaction($request);
-    
+                            //update DB to be successful
+                            $inflow->updateFromCallBackForSuccessfulTransaction($request);
                             return  response([
                                 'responseCode' => "00",
                                 'responseMessage' => "Callback received"
                             ], 200);
+                            } else {
+                                $inflow->updateFromCallBackForFailedTransaction($request);
+        
+                                return  response([
+                                    'responseCode' => "00",
+                                    'responseMessage' => "Callback received"
+                                ], 200);
+                            }
                         }
-                    }    
+                        
+                    } else {
+                        return  response([
+                            'responseCode' => "1",
+                            'responseMessage' => "Not Found"
+                        ], 400);
+                    } 
                 }             
             }else{
                 $this->response->responseCode = '1';
@@ -164,6 +179,36 @@ class AgentWalletController extends Controller
         }
     }
 
+
+
+    public function alertUrl(AlertRequest $request)
+    {
+        try {
+            $findByReference = findByRefernceAndCustomerId($request->reference, $request->customerId);
+            Log::info($findByReference);
+            if (!empty($findByReference)) {
+                $this->response->responseCode = '0';
+                $this->response->message = 'Details retrieved';
+                $this->response->isSuccessful = true;
+                $this->response->data = [
+                    "customerId" => $findByReference['customerId'],
+                    "amountReceived" => $findByReference['received_amount'],
+                    "status" => $findByReference['status'],
+                    "reference" => $findByReference['reference'],
+                ];
+                return response()->json($this->response, 200);
+            }
+            $this->response->responseCode = '1';
+            $this->response->message = 'Invalid Details';
+            $this->response->isSuccessful = false;
+            return response()->json($this->response, 400);
+        } catch (\Exception $e) {
+            $this->response->message = 'Processing Failed, Contact Support';
+            Log::info(json_encode($e));
+            $this->response->error = $e->getMessage();
+            return response()->json($this->response, 500);
+        }
+    }
 
     
 }

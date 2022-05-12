@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('reference');
             $table->string('status');
             $table->string('request_time');
+            $table->string('callback_url');
             $table->string('provider');
             $table->string('action')->nullable();
             $table->string('fee')->nullable();
@@ -37,6 +38,7 @@ return new class extends Migration
             $table->string('transactionId')->nullable();
             $table->string('time_of_verification')->nullable();
             $table->string('walletAccountNumber')->nullable();
+            $table->json('application_response')->nullable();
             $table->timestamps();
         });
     }

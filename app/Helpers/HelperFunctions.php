@@ -242,7 +242,45 @@ function getMerchantBalance($baseUrl)
 
 
 
-function findInFlowbyReference($reference)
+function findInFlowbyReference($reference,$walletNumber)
 {
-    return Inflow::where('reference', $reference)->first();
+    return Inflow::where('reference', $reference)->where('accountNumber', $walletNumber)->where('status', TransactionStatus::PENDING->value)->first();
 }
+
+//find infiow here referece, wallter number, status pending
+
+function findByRefernceAndCustomerId($reference, $customerId)
+{
+    return Inflow::where('reference', $reference)->where('customerId', $customerId)->first();
+}
+
+
+function httpPostRequestCallback($url, $body, $auth)
+{
+    $data = Http::withHeaders([
+        'Content-Type' => 'application/json',
+        'accept' => 'application/json',
+        'x-funding' => $auth
+    ])->post($url, $body);
+
+    return $data;
+}
+
+function postToIndians($request, $id, $url)
+{
+    
+    $callBackSecret = env('INDIAN_SECRET');
+    $body = [
+        'customerId' => $id,
+        'reference' => $request->reference,
+        'amount' => $request->amount,
+        'success' => $request->success
+    ];
+    Log::info(json_encode($body));
+    // Log::info($body);
+    $hashedPayload = hash_hmac("sha512", json_encode($body) , $callBackSecret);
+    Log::info($hashedPayload);
+    return httpPostRequestCallback($url, $body, $hashedPayload);
+}
+
+

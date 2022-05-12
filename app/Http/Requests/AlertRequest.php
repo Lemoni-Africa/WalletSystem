@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class MerchantPayRequest extends FormRequest
+class AlertRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,8 +25,7 @@ class MerchantPayRequest extends FormRequest
     {
         return [
             'customerId' => 'required',
-            'amount' => 'required',
-            'callbackUrl' => 'required'
+            'reference' => 'required',
         ];
     }
 }
