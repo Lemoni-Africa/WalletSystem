@@ -116,6 +116,7 @@ class AgentWalletController extends Controller
     public function fundingCallBack(ChakraCallBackRequest $request)
     {
         try {
+            Log::info($request->all());
             if ($request->hasHeader('x-payout-signature')) {
                 $payoutSignature = $request->header('x-payout-signature');
                 $request->headers->set('Content-Type', 'application/json');
