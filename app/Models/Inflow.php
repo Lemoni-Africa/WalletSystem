@@ -36,7 +36,7 @@ class Inflow extends Model
         $this->accountNumber = $data['accountNumber'];
         $this->accountName = $data['accountName'];
         $this->bankName = $data['bankName'];
-        // $this->bankCode = $data['bankCode'];
+        $this->bankCode = $data['bankCode'];
         $this->reference = $data['reference'];
         $this->request_time = Carbon::now();
         $this->provider = Providers::CHAKRA->value;

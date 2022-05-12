@@ -72,7 +72,8 @@ class AgentWalletController extends Controller
             $this->response->data = [
                 "accountNumber" => $walletGenerated['accountNumber'],
                 "accountName" => $walletGenerated['accountName'],
-                "bankName" => $walletGenerated['bankName']
+                "bankName" => $walletGenerated['bankName'],
+                "bankCode" => $walletGenerated['bankCode']
             ];
             return response()->json($this->response, 200);
         } catch (\Exception $e) {
