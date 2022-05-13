@@ -63,4 +63,15 @@ class Payout extends Model
         $this->save();
         return $this;
     }
+
+    public function UpdateFailedPayOut($data) 
+    {
+        $this->creditProcessed = $data['data']['creditProcessed'];
+        $this->transferStatus = $data['data']['transferStatus'];
+        $this->markedForReversal = $data['data']['markedForReversal'];
+        $this->reversed = $data['data']['reversed'];
+        $this->transactionStatus = TransactionStatus::FAILED->value;
+        $this->save();
+        return $this;
+    }
 }

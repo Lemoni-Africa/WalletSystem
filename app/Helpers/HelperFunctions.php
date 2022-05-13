@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Inflow;
+use App\Models\Wallet;
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
@@ -148,16 +150,24 @@ function chakraPayOut($request, $baseUrl)
     $header = createHeaders();
     $merchantRef = generateMerchantRef();
     $url = "{$baseUrl}/payout-default/quick-pay?chakra-credentials={$base64Cred}";
+    //check if wallet is on db
+    $walletFromDb = Wallet::where('email', $request->sender)->first();
+    if(!empty($walletFromDb)){
+        $pin = decryptPin($walletFromDb['pin']);
+    }
+    else {
+        $pin = '1234';
+    }
+    // get the password and decrpty
     $body = [
         'merchantRef' => $merchantRef,
         'sender' => $request->sender,
         'amount' => $request->amount,
-        'narration' => $request->narration,
-        'pin' => $request->pin,
+        'narration' => "Sent " . $request->amount . " to " . $request->beneficiaryAccountNumber,
+        'pin' => $pin,
         'beneficiaryBankCode' => $request->beneficiaryBankCode,
         'beneficiaryAccountNumber' => $request->beneficiaryAccountNumber,
     ];
-
     return httpPostRequest($url, $body, $header);
     
 }
@@ -213,6 +223,12 @@ function encryptPin($pin)
 {
     // return Crypt::encryptString($pin);
     return encrypt($pin);
+}
+
+function decryptPin($pin)
+{
+    // return Crypt::encryptString($pin);
+    return decrypt($pin);
 }
 
 function getMerchantPeer($baseUrl)

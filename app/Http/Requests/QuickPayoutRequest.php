@@ -26,8 +26,6 @@ class QuickPayoutRequest extends FormRequest
         return [
             'sender' => 'required',
             'amount' => 'required',
-            'narration' => 'required',
-            'pin' => 'required',
             'beneficiaryBankCode' => 'required',
             'beneficiaryAccountNumber' => 'required',
         ];

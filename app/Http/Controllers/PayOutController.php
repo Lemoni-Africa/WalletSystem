@@ -49,8 +49,10 @@ class PayOutController extends Controller
                     
                     return response()->json($response, 200);
                 }
+                // Log::info($getStatus);
+                $payout->UpdateFailedPayOut($getStatus);
                 $response['responseCode'] = '1';
-                $response['message'] = "Transaction Status unknown. Contact Support";
+                $response['message'] = "FAILED";
                 $response['isSuccess'] = false;
                 $response['data'] = [
                     'transactionRef' => $data['data']['merchantReference']
