@@ -52,7 +52,7 @@ class PayOutController extends Controller
                 // Log::info($getStatus);
                 $payout->UpdateFailedPayOut($getStatus);
                 $response['responseCode'] = '1';
-                $response['message'] = "FAILED";
+                $response['message'] =   $getStatus["responseMessage"];
                 $response['isSuccess'] = false;
                 $response['data'] = [
                     'transactionRef' => $data['data']['merchantReference']
