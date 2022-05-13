@@ -41,7 +41,7 @@ class PayOutController extends Controller
                 if ($getStatus['data']['transferStatus'] === "SUCCESSFUL") {
                     $payout->UpdateSuccessfulPayOut($getStatus);
                     $response['responseCode'] = '0';
-                    $response['message'] = $getStatus['data']['transferStatus'];
+                    $response['message'] = $getStatus['data']['creditProcessedStatus'];
                     $response['isSuccess'] = true;
                     $response['data'] = [
                         'transactionRef' => $data['data']['merchantReference']
@@ -49,10 +49,10 @@ class PayOutController extends Controller
                     
                     return response()->json($response, 200);
                 }
-                // Log::info($getStatus);
+                Log::info($getStatus);
                 $payout->UpdateFailedPayOut($getStatus);
                 $response['responseCode'] = '1';
-                $response['message'] =   $getStatus["responseMessage"];
+                $response['message'] =   $getStatus['data']["creditProcessedStatus"];
                 $response['isSuccess'] = false;
                 $response['data'] = [
                     'transactionRef' => $data['data']['merchantReference']
