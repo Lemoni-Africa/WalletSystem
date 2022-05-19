@@ -92,8 +92,8 @@ function getToken (){
     Log::info($body);
     $response = postJsonRequest($url, $body);
     $token = $response['data']['accessToken'];
-    Cache::put('token', $token , now()->addMinutes(60));
-    // Cache::delete('token');
+    Cache::put('token', $token , now()->addMinutes(20));
+
     return $token;
 }
 
