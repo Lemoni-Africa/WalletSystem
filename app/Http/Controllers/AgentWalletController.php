@@ -8,6 +8,7 @@ use App\Http\Requests\ChakraCallBackRequest;
 use App\Http\Requests\CreateWalletRequest;
 use App\Http\Requests\MerchantPayRequest;
 use App\Models\Inflow;
+use App\Models\MerchantBalance;
 use App\Models\Wallet;
 use gender;
 use Illuminate\Http\Request;
@@ -97,7 +98,15 @@ class AgentWalletController extends Controller
                 'message' => null,
             ];
             $data = getMerchantBalance($this->baseUrl);
-            Log::info('sdsdsd' .$data);
+            $merchBalance = new MerchantBalance();
+            $accountFromDb = $this->checkAccountNumber($data['accountNumber']);
+            if (empty($accountFromDb)) {
+                $merchBalance->AddMerchBalance($data);      
+            }   
+            $merchBalance->updateMerchBalance($data);
+            
+            
+            
             $response['responseCode'] = '0';
             $response['message'] = $data['responseMessage'];
             $response['isSuccess'] = true;
@@ -210,5 +219,10 @@ class AgentWalletController extends Controller
         }
     }
 
+
+    public static function checkAccountNumber($accountNumber)
+    {
+        return MerchantBalance::where('accountNumber', $accountNumber)->first();
+    }
     
 }

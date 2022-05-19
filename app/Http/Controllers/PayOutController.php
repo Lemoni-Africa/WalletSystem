@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EnquiryRequest;
 use App\Http\Requests\QuickPayoutRequest;
+use App\Http\Requests\ResolveBankNameRequest;
 use App\Models\Payout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -14,9 +15,11 @@ use TransactionStatus;
 class PayOutController extends Controller
 {
     private $baseUrl;
+    private $baseCrustUrl;
     public function __construct()
     {
         $this->baseUrl = env('BASE_URL');
+        $this->baseCrustUrl = env('CRUST_BASE_URL');
     }
 
     public function quickPay(QuickPayoutRequest $request)
@@ -131,8 +134,8 @@ class PayOutController extends Controller
             }
             $response['responseCode'] = '2';
             $response['message'] = $data['responseMessage'];
-            $response['isSuccess'] = true;
-            return response()->json($response, 200);
+            $response['isSuccess'] = false;
+            return response()->json($response, 400);
 
         } catch (\Exception $e) {
             return response([
@@ -143,5 +146,67 @@ class PayOutController extends Controller
         }
     }
 
+
+
+
+
+    public function quickPayCrust(QuickPayoutRequest $request)
+    {
+        try {
+            $data = crustPayout($request, $this->baseCrustUrl);
+            // $accDetails = $this->getAccountDetails($request->beneficiaryBankCode, $request->beneficiaryAccountNumber);
+            Log::info($data);
+        } catch (\Exception $e) {
+            return response([
+                'isSuccesful' => false,
+                'message' => 'Processing Failed, Contact Support',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+        
+    }
+
+
+    public function getAccountName(ResolveBankNameRequest $request)
+    {
+        try {
+            $response = [
+                'isSuccess' =>  false,
+                'responseCode' => null,
+                'data'=> null,
+                'message' => null,
+            ];
+            $data = getAccountName($request, $this->baseCrustUrl);
+            Log::info($data);
+            if ($data['success']) {
+                $response['responseCode'] = '0';
+                $response['message'] = $data['message'];
+                $response['isSuccess'] = true;
+                $response['data'] = $data['data'];
+
+                return response()->json($response, 200);
+            }
+            $response['responseCode'] = '1';
+            $response['message'] = $data['message'];
+            $response['isSuccess'] = false;
+            $response['data'] = $data['data'];
+
+            return response()->json($response, 400);
+        } catch (\Exception $e) {
+            return response([
+                'isSuccesful' => false,
+                'message' => 'Processing Failed, Contact Support',
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+    }
+
+    private function getAccountDetails($bankCode, $accountNumber)
+    {
+        return $data = getAccountName2($bankCode, $accountNumber, $this->baseCrustUrl);
+        Log::info($data);
+        // return $data['account_name'];
+    }
 
 }

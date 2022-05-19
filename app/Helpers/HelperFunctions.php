@@ -93,6 +93,7 @@ function getToken (){
     $response = postJsonRequest($url, $body);
     $token = $response['data']['accessToken'];
     Cache::put('token', $token , now()->addMinutes(60));
+    // Cache::delete('token');
     return $token;
 }
 
@@ -144,6 +145,16 @@ function httpPostRequest($url, $body, $auth)
     return $data;
 }
 
+function httpPostRequest2($url, $body, $auth)
+{
+    $data = Http::withHeaders([
+        'Content-Type' => 'application/json',
+        'accept' => 'application/json',
+        'Authorization' => $auth
+    ])->post($url, $body);
+
+    return $data;
+}
 function chakraPayOut($request, $baseUrl)
 {
     $base64Cred = base64ChakraCred();
@@ -172,6 +183,41 @@ function chakraPayOut($request, $baseUrl)
     
 }
 
+
+function crustPayout($request, $baseUrl)
+{
+    $header = env('CRUST_HEADER');
+    $url = "{$baseUrl}/api/debit";
+    $body = [
+        'amount' => $request->amount,
+        'narration' => $request->narration,
+        'bankCode' => $request->beneficiaryBankCode,
+        'accountNumber' => $request->beneficiaryAccountNumber,
+    ];
+    return httpPostRequest2($url, $body, $header);
+}
+
+function getAccountName($request, $baseUrl)
+{
+    $header = env('CRUST_HEADER');
+    $url = "{$baseUrl}/api/resolve-account-name";
+    $body = [
+        'accountnumber' => $request->accountnumber,
+        'bankcode' => $request->bankcode
+    ];
+    return httpPostRequest2($url, $body, $header);
+}
+
+function getAccountName2($bankCode, $accountNumber, $baseUrl)
+{
+    $header = env('CRUST_HEADER');
+    $url = "{$baseUrl}/api/resolve-account-name";
+    $body = [
+        'accountnumber' => $accountNumber,
+        'bankcode' => $bankCode
+    ];
+    return httpPostRequest2($url, $body, $header);
+}
 
 function getStatus($baseUrl, $transactionId)
 {
@@ -300,3 +346,30 @@ function postToIndians($request, $id, $url)
 }
 
 
+
+function getBanks($baseUrl)
+{
+    $header = env('CRUST_HEADER');
+    $url = "{$baseUrl}/api/bank-list";
+    return Http::withHeaders([
+        'Authorization' => $header
+    ])->get($url);
+}
+
+function getBalance($baseUrl)
+{
+    $header = env('CRUST_HEADER');
+    $url = "{$baseUrl}/api/balance";
+    return Http::withHeaders([
+        'Authorization' => $header
+    ])->get($url);
+}
+
+function getAccounts($baseUrl)
+{
+    $header = env('CRUST_HEADER');
+    $url = "{$baseUrl}/api/accounts";
+    return Http::withHeaders([
+        'Authorization' => $header
+    ])->get($url);
+}

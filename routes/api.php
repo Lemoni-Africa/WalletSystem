@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AgentWalletController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BankListController;
 use App\Http\Controllers\PayOutController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -24,8 +25,16 @@ Route::group(array('prefix' => 'auth' ), function () {
 
 Route::group(array('prefix' => 'payout' ), function () {
     Route::post('quick', [PayOutController::class, 'quickPay']);
+    Route::post('quickCrust', [PayOutController::class, 'quickPayCrust']);
+    Route::post('getAccountName', [PayOutController::class, 'getAccountName']);
     Route::get('status/{transactionId}', [PayOutController::class, 'payOutStatus']);
     Route::post('bankEnquiry', [PayOutController::class, 'makeEnquiry']);
+});
+
+Route::group(array('prefix' => 'bank' ), function () {
+    Route::get('bankList', [BankListController::class, 'getBankList']);
+    Route::get('bankBalance', [BankListController::class, 'getBalance']);
+    Route::get('bankAccounts', [BankListController::class, 'getAccounts']);
 });
 
 Route::group(array('prefix' => 'wallet' ), function () {
