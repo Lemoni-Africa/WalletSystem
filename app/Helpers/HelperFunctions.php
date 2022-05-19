@@ -68,7 +68,7 @@ function curlCallRestApi($url, $headers, $jsonEncodedBody, $method){
 
 function createHeaders(){
     $existingToken = Cache::get('token');
-    if (empty($existingToken)) {
+    if (!empty($existingToken)) {
         $token = getToken();
         $headers = [];
         $headers[] = 'Bearer '.$token;

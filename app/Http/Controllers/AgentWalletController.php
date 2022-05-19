@@ -44,14 +44,14 @@ class AgentWalletController extends Controller
 
                 $this->response->responseCode = '0';
                 $this->response->message = $data['responseMessage'];
-                $this->response->isSuccess = true;
+                $this->response->isSuccessful = true;
                 $this->response->data = $data['data'];
                 return response()->json($this->response, 200);
 
             }
             $this->response->responseCode = '2';
             $this->response->message = $data['responseMessage'];
-            $this->response->isSuccess = true;
+            $this->response->isSuccessful = true;
             return response()->json($this->response, 200);
             
         } catch (\Exception $e) {
@@ -66,20 +66,28 @@ class AgentWalletController extends Controller
     {
         try {
             $walletGenerated = getMerchantPeer($this->baseUrl);
-            $saveInflow = new Inflow();
             Log::info($walletGenerated);
-            $saveInflow->saveInFlowRequest($walletGenerated, $request); 
-            $this->response->responseCode = '0';
-            $this->response->message = $walletGenerated['message'];
+            return;
+            if ($walletGenerated['responseCode'] == "00"){
+                $saveInflow = new Inflow();
+                Log::info($walletGenerated);
+                $saveInflow->saveInFlowRequest($walletGenerated, $request); 
+                $this->response->responseCode = '0';
+                $this->response->message = $walletGenerated['message'];
+                $this->response->isSuccessful = true;
+                $this->response->data = [
+                    "accountNumber" => $walletGenerated['accountNumber'],
+                    "accountName" => $walletGenerated['accountName'],
+                    "reference" => $walletGenerated['reference'],
+                    "bankName" => $walletGenerated['bankName'],
+                    "bankCode" => $walletGenerated['bankCode']
+                ];
+                return response()->json($this->response, 200);
+            }
+            $this->response->responseCode = '2';
+            $this->response->message = $walletGenerated['responseMessage'];
             $this->response->isSuccessful = true;
-            $this->response->data = [
-                "accountNumber" => $walletGenerated['accountNumber'],
-                "accountName" => $walletGenerated['accountName'],
-                "reference" => $walletGenerated['reference'],
-                "bankName" => $walletGenerated['bankName'],
-                "bankCode" => $walletGenerated['bankCode']
-            ];
-            return response()->json($this->response, 200);
+            return response()->json($this->response, 400);
         } catch (\Exception $e) {
             $this->response->message = 'Processing Failed, Contact Support';
             Log::info(json_encode($e));
