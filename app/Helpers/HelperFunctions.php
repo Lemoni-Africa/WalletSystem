@@ -67,16 +67,27 @@ function curlCallRestApi($url, $headers, $jsonEncodedBody, $method){
 }
 
 function createHeaders(){
-    $existingToken = Cache::get('token');
-    if (empty($existingToken)) {
-        $token = getToken();
+    try {
+        $existingToken = Cache::get('token');
+        if (empty($existingToken)) {
+            $token = getToken();
+            $headers = [];
+            $headers[] = 'Bearer '.$token;
+            return $headers;
+        }
         $headers = [];
-        $headers[] = 'Bearer '.$token;
+        $headers[] = 'Bearer '.$existingToken;
         return $headers;
+    
+    } catch (\Exception $e) {
+        Log::info(json_encode($e));
+        return response([
+            'isSuccesful' => false,
+            'message' => 'Processing Failed, Contact Support',
+            // 'error' => $e->getMessage()
+        ]);
     }
-    $headers = [];
-    $headers[] = 'Bearer '.$existingToken;
-    return $headers;
+    
 }
 
 function getToken (){
@@ -88,7 +99,6 @@ function getToken (){
         'merchantId' => $merchantId,
         'apiKey' => $apiKey,
     ];
-    // $body2 = json_encode($body);
     Log::info($body);
     $response = postJsonRequest($url, $body);
     $token = $response['data']['accessToken'];
