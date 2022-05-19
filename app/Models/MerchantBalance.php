@@ -16,9 +16,9 @@ class MerchantBalance extends Model
         $this->accountNumber = $data['accountNumber'];
         $this->bankName = $data['bankName'];
         $this->accountName = $data['accountName'];
-        $this->previousAvailableBalance = $data['data']['previousAvailableBalance'];
-        $this->availableBalance = $data['data']['availableBalance'];
-        $this->bookedBalance = $data['data']['bookedBalance'];
+        $this->previousAvailableBalance = strval($data['data']['previousAvailableBalance']);
+        $this->availableBalance = strval($data['data']['availableBalance']);
+        $this->bookedBalance = strval($data['data']['bookedBalance']);
         $this->save();
 
         return $this;
@@ -27,9 +27,9 @@ class MerchantBalance extends Model
     public function updateMerchBalance($data)
     {
         $updateDetails = [
-            'previousAvailableBalance' => $data['data']['previousAvailableBalance'],
-            'availableBalance' => $data['data']['availableBalance'],
-            'bookedBalance' => $data['data']['bookedBalance'],
+            'previousAvailableBalance' => strval($data['data']['previousAvailableBalance']),
+            'availableBalance' => strval($data['data']['availableBalance']),
+            'bookedBalance' => strval($data['data']['bookedBalance']),
             'updated_at' => Carbon::now()
         ];
        DB::table('merchant_balances')->where('accountNumber', $data['accountNumber'])->update($updateDetails);

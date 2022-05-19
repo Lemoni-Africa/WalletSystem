@@ -18,9 +18,9 @@ return new class extends Migration
             $table->string('accountNumber');
             $table->string('bankName');
             $table->string('accountName');
-            $table->decimal('previousAvailableBalance');
-            $table->decimal('availableBalance');
-            $table->decimal('bookedBalance');
+            $table->string('previousAvailableBalance');
+            $table->string('availableBalance');
+            $table->string('bookedBalance');
             $table->timestamps();
         });
     }

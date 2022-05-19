@@ -67,8 +67,7 @@ class AgentWalletController extends Controller
         try {
             $walletGenerated = getMerchantPeer($this->baseUrl);
             Log::info($walletGenerated);
-            return;
-            if ($walletGenerated['responseCode'] == "00"){
+            if ($walletGenerated['success']){
                 $saveInflow = new Inflow();
                 Log::info($walletGenerated);
                 $saveInflow->saveInFlowRequest($walletGenerated, $request); 
@@ -86,7 +85,7 @@ class AgentWalletController extends Controller
             }
             $this->response->responseCode = '2';
             $this->response->message = $walletGenerated['responseMessage'];
-            $this->response->isSuccessful = true;
+            $this->response->isSuccessful = false;
             return response()->json($this->response, 400);
         } catch (\Exception $e) {
             $this->response->message = 'Processing Failed, Contact Support';
@@ -108,19 +107,23 @@ class AgentWalletController extends Controller
             ];
             $data = getMerchantBalance($this->baseUrl);
             $merchBalance = new MerchantBalance();
-            $accountFromDb = $this->checkAccountNumber($data['accountNumber']);
-            if (empty($accountFromDb)) {
-                $merchBalance->AddMerchBalance($data);      
-            }   
-            $merchBalance->updateMerchBalance($data);
-            
-            
-            
-            $response['responseCode'] = '0';
+            if ($data['responseCode'] == "00"){
+                $accountFromDb = $this->checkAccountNumber($data['accountNumber']);
+                if (empty($accountFromDb)) {
+                    $merchBalance->AddMerchBalance($data);      
+                }   
+                $merchBalance->updateMerchBalance($data);
+                $response['responseCode'] = '0';
+                $response['message'] = $data['responseMessage'];
+                $response['isSuccess'] = true;
+                $response['data'] = json_decode($data) ;
+                return response()->json($response, 200);
+            }
+            $response['responseCode'] = '2';
             $response['message'] = $data['responseMessage'];
-            $response['isSuccess'] = true;
+            $response['isSuccess'] = false;
             $response['data'] = json_decode($data) ;
-            return response()->json($response, 200);
+            return response()->json($response, 400);
 
         } catch (\Exception $e) {
             return response([
