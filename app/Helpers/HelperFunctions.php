@@ -383,3 +383,12 @@ function getAccounts($baseUrl)
         'Authorization' => $header
     ])->get($url);
 }
+
+function getTransactionList($baseUrl, $pageNumber, $perPage)
+{
+    $header = env('CRUST_HEADER');
+    $url = "{$baseUrl}/api/transactions?page={$pageNumber}&per_page={$perPage}";
+    return Http::withHeaders([
+        'Authorization' => $header
+    ])->get($url);
+}

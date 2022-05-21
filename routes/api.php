@@ -29,6 +29,7 @@ Route::group(array('prefix' => 'payout' ), function () {
     Route::post('getAccountName', [PayOutController::class, 'getAccountName']);
     Route::get('status/{transactionId}', [PayOutController::class, 'payOutStatus']);
     Route::post('bankEnquiry', [PayOutController::class, 'makeEnquiry']);
+    Route::get('transactions', [PayOutController::class, 'getTransactionList']);
 });
 
 Route::group(array('prefix' => 'bank' ), function () {

@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Contract\Responses\DefaultApiResponse;
 use App\Http\Requests\EnquiryRequest;
 use App\Http\Requests\QuickPayoutRequest;
 use App\Http\Requests\ResolveBankNameRequest;
+use App\Http\Requests\TransactionListCrustRequest;
+use App\Http\Resources\ChakraPayoutCallBackRequest;
 use App\Models\Payout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -16,10 +19,14 @@ class PayOutController extends Controller
 {
     private $baseUrl;
     private $baseCrustUrl;
+    private $callBackSecret;
+    private $response;
     public function __construct()
     {
         $this->baseUrl = env('BASE_URL');
         $this->baseCrustUrl = env('CRUST_BASE_URL');
+        $this->callBackSecret = env('CALL_BACK_SECRET');
+        $this->response = new DefaultApiResponse();
     }
 
     public function quickPay(QuickPayoutRequest $request)
@@ -154,7 +161,7 @@ class PayOutController extends Controller
     {
         try {
             $data = crustPayout($request, $this->baseCrustUrl);
-            // $accDetails = $this->getAccountDetails($request->beneficiaryBankCode, $request->beneficiaryAccountNumber);
+            $accDetails = $this->getAccountDetails($request->beneficiaryBankCode, $request->beneficiaryAccountNumber);
             Log::info($data);
         } catch (\Exception $e) {
             return response([
@@ -208,5 +215,97 @@ class PayOutController extends Controller
         Log::info($data);
         // return $data['account_name'];
     }
+
+    public function getTransactionList(TransactionListCrustRequest $request)
+    {
+        try {
+            $page = $request->query('page');
+            $per_page = $request->query('per_page');
+
+            $data = getTransactionList($this->baseCrustUrl, $page, $per_page);
+            Log::info($data);
+            if ($data['success']) {
+                $this->response->responseCode = '0';
+                $this->response->message = $data['message'];
+                $this->response->isSuccessful = true;
+                $this->response->data = $data['data'];
+                return response()->json($this->response, 200);
+            }
+            $this->response->responseCode = '2';
+            $this->response->message = $data['message'];
+            $this->response->isSuccessful = true;
+            return response()->json($this->response, 400);
+        } catch (\Exception $e) {
+            $this->response->message = 'Processing Failed, Contact Support';
+            Log::info(json_encode($e));
+            $this->response->error = $e->getMessage();
+            return response()->json($this->response, 500);
+        }
+        
+    }
+    // public function payoutCallBack(ChakraPayoutCallBackRequest $request)
+    // {
+    //     try {
+    //         Log::info($request->all());
+    //         if ($request->hasHeader('x-payout-signature')) {
+    //             $payoutSignature = $request->header('x-payout-signature');
+    //             $request->headers->set('Content-Type', 'application/json');
+    //             // $jsonEncodedPayload = json_encode($request->all());
+    //             $hashedPayload = hash_hmac("sha512", json_encode($request->all()) , $this->callBackSecret);
+    //             Log::info($hashedPayload);
+    //             if($hashedPayload != $payoutSignature)
+    //             {
+    //                 $this->response->responseCode = '1';
+    //                 $this->response->message = "Invalid Signature";                    
+    //                 return response()->json($this->response, 401);
+    //             }else{
+                    
+    //                 $inflow = new Inflow();
+    //                 $fromDb = findInFlowbyReference($request->reference,$request->walletAccountNumber);
+    //                 if (!empty($fromDb)) {
+    //                     $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
+    //                     Log::info('************response from application************' .  $response);
+    //                     $inflow->saveResponse($request, $response);
+    //                     if ($response->successful())
+    //                     {
+    //                     if ($request->success) {
+    //                         //update DB to be successful
+    //                         $inflow->updateFromCallBackForSuccessfulTransaction($request);
+    //                         return  response([
+    //                             'responseCode' => "00",
+    //                             'responseMessage' => "Callback received"
+    //                         ], 200);
+    //                         } else {
+    //                             $inflow->updateFromCallBackForFailedTransaction($request);
+        
+    //                             return  response([
+    //                                 'responseCode' => "00",
+    //                                 'responseMessage' => "Callback received"
+    //                             ], 200);
+    //                         }
+    //                     }
+                        
+    //                 } else {
+    //                     return  response([
+    //                         'responseCode' => "1",
+    //                         'responseMessage' => "Not Found"
+    //                     ], 400);
+    //                 } 
+    //             }             
+    //         }else{
+    //             $this->response->responseCode = '1';
+    //             $this->response->message = "Invalid Signature";                    
+    //             return response()->json($this->response, 401);
+    //         }
+            
+            
+    //     } catch (\Exception $e) {
+    //         $this->response->message = 'Processing Failed, Contact Support';
+    //         Log::info(json_encode($e));
+    //         $this->response->error = $e->getMessage();
+    //         return response()->json($this->response, 500);
+    //     }
+    
+    // }
 
 }
