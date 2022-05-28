@@ -12,6 +12,7 @@ use App\Http\Requests\NumeroAccountCreationRequest;
 use App\Models\Inflow;
 use App\Models\MerchantBalance;
 use App\Models\Wallet;
+use Carbon\Carbon;
 use gender;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use TransactionStatus;
 
 class AgentWalletController extends Controller
 {
@@ -180,6 +182,7 @@ class AgentWalletController extends Controller
     public function fundingCallBack(ChakraCallBackRequest $request)
     {
         try {
+            Log::info('**********');
             Log::info($request->all());
             if ($request->hasHeader('x-payout-signature')) {
                 $payoutSignature = $request->header('x-payout-signature');
@@ -204,13 +207,13 @@ class AgentWalletController extends Controller
                         // {
                         if ($request->success) {
                             //update DB to be successful
-                            $inflow->updateFromCallBackForSuccessfulTransaction($request);
+                            $inflow->updateFromCallBackForSuccessfulTransaction($fromDb, $request);
                             return  response([
                                 'responseCode' => "00",
                                 'responseMessage' => "Callback received"
                             ], 200);
                             } else {
-                                $inflow->updateFromCallBackForFailedTransaction($request);
+                                $inflow->updateFromCallBackForFailedTransaction($fromDb, $request);
         
                                 return  response([
                                     'responseCode' => "00",
@@ -256,13 +259,13 @@ class AgentWalletController extends Controller
                 // {
                 if ($request->status === "SUCCESSFUL") {
                     //update DB to be successful
-                    $inflow->updateFromCallBackForSuccessfulCrustTransaction($request);
+                    $inflow->updateFromCallBackForSuccessfulCrustTransaction($fromDb,$request);
                     return  response([
                         'responseCode' => "00",
                         'responseMessage' => "Callback received"
                     ], 200);
                     } else {
-                        $inflow->updateFromCallBackForFailedCrustTransaction($request);
+                        $inflow->updateFromCallBackForFailedCrustTransaction($fromDb,$request);
 
                         return  response([
                             'responseCode' => "00",

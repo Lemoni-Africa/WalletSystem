@@ -66,67 +66,57 @@ class Inflow extends Model
         return $this;
     }
 
-    public function updateFromCallBackForFailedTransaction($request) 
+    public function updateFromCallBackForFailedTransaction($fromDb, $request) 
     {
-        $updateDetails = [
-            'action' => $request->action,
-            'received_amount' => $request->amount,
-            'fee' => $request->fee,
-            'narration' => $request->narration,
-            'srcAccountName' => $request->srcAccountName,
-            'srcAccountNumber' => $request->srcAccountNumber,
-            'srcBankCode' => $request->srcBankCode,
-            'srcBankName' => $request->srcBankName,
-            'success' => $request->success,
-            'transactionId' => $request->transactionId,
-            'walletAccountNumber' => $request->walletAccountNumber,
-            'time_of_verification' => Carbon::now(),
-            'status' => TransactionStatus::FAILED->value
-        ];
-        DB::table('inflows')->where('reference', $request->reference)->where('accountNumber', $request->walletNumber)->update($updateDetails);
+        $fromDb->action = $request->action;
+        $fromDb->received_amount = $request->amount;
+        $fromDb->fee = $request->fee;
+        $fromDb->narration = $request->narration;
+        $fromDb->srcAccountName = $request->srcAccountName;
+        $fromDb->srcAccountNumber = $request->srcAccountNumber;
+        $fromDb->srcBankCode = $request->srcBankCode;
+        $fromDb->srcBankName = $request->srcBankName;
+        $fromDb->success = $request->success;
+        $fromDb->transactionId = $request->transactionId;
+        $fromDb->walletAccountNumber = $request->walletAccountNumber;
+        $fromDb->time_of_verification = Carbon::now();
+        $fromDb->status = TransactionStatus::FAILED->value;
+        $fromDb->save();
     }
 
-    public function updateFromCallBackForSuccessfulTransaction($request)
+    public function updateFromCallBackForSuccessfulTransaction($fromDb, $request)
     {
-        $updateDetails = [
-            'action' => $request->action,
-            'received_amount' => $request->amount,
-            'fee' => $request->fee,
-            'narration' => $request->narration,
-            'srcAccountName' => $request->srcAccountName,
-            'srcAccountNumber' => $request->srcAccountNumber,
-            'srcBankCode' => $request->srcBankCode,
-            'srcBankName' => $request->srcBankName,
-            'success' => $request->success,
-            'transactionId' => $request->transactionId,
-            'walletAccountNumber' => $request->walletAccountNumber,
-            'time_of_verification' => Carbon::now(),
-            'status' => TransactionStatus::COMPLETED->value,
-        ];
-       DB::table('inflows')->where('reference', $request->reference)->where('accountNumber', $request->walletNumber)->update($updateDetails);
-              
+        $fromDb->action = $request->action;
+        $fromDb->received_amount = $request->amount;
+        $fromDb->fee = $request->fee;
+        $fromDb->narration = $request->narration;
+        $fromDb->srcAccountName = $request->srcAccountName;
+        $fromDb->srcAccountNumber = $request->srcAccountNumber;
+        $fromDb->srcBankCode = $request->srcBankCode;
+        $fromDb->srcBankName = $request->srcBankName;
+        $fromDb->success = $request->success;
+        $fromDb->transactionId = $request->transactionId;
+        $fromDb->walletAccountNumber = $request->walletAccountNumber;
+        $fromDb->time_of_verification = Carbon::now();
+        $fromDb->status = TransactionStatus::COMPLETED->value;
+        $fromDb->save();
     }
 
-    public function updateFromCallBackForSuccessfulCrustTransaction($request)
+    public function updateFromCallBackForSuccessfulCrustTransaction($fromDb, $request)
     {
-        $updateDetails = [
-            'received_amount' => $request->amount,
-            'walletAccountNumber' => $request->accountNumber,
-            'time_of_verification' => Carbon::now(),
-            'status' => TransactionStatus::COMPLETED->value,
-        ];
-       DB::table('inflows')->where('reference', $request->transactionNumber)->where('accountNumber', $request->accountNumber)->update($updateDetails);
-              
+        $fromDb->received_amount = $request->amount;
+        $fromDb->walletAccountNumber = $request->accountNumber;
+        $fromDb->time_of_verification = Carbon::now();
+        $fromDb->status = TransactionStatus::COMPLETED->value;
+        $fromDb->save(); 
     }
-    public function updateFromCallBackForFailedCrustTransaction($request) 
+    public function updateFromCallBackForFailedCrustTransaction($fromDb,$request) 
     {
-        $updateDetails = [
-            'received_amount' => $request->amount,
-            'walletAccountNumber' => $request->accountNumber,
-            'time_of_verification' => Carbon::now(),
-            'status' => TransactionStatus::FAILED->value
-        ];
-        DB::table('inflows')->where('reference', $request->transactionNumber)->where('accountNumber', $request->accountNumber)->update($updateDetails);
+        $fromDb->received_amount = $request->amount;
+        $fromDb->walletAccountNumber = $request->accountNumber;
+        $fromDb->time_of_verification = Carbon::now();
+        $fromDb->status = TransactionStatus::FAILED->value;
+        $fromDb->save();
     }
 
     public function saveResponse($request, $response)
