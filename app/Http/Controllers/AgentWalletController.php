@@ -6,7 +6,9 @@ use App\Contract\Responses\DefaultApiResponse;
 use App\Http\Requests\AlertRequest;
 use App\Http\Requests\ChakraCallBackRequest;
 use App\Http\Requests\CreateWalletRequest;
+use App\Http\Requests\CrustCallBackRequest;
 use App\Http\Requests\MerchantPayRequest;
+use App\Http\Requests\NumeroAccountCreationRequest;
 use App\Models\Inflow;
 use App\Models\MerchantBalance;
 use App\Models\Wallet;
@@ -22,11 +24,17 @@ class AgentWalletController extends Controller
 {
     private $baseUrl;
     private $response;
+    private $baseNumeroUrl;
     private $callBackSecret;
+    private $provider;
+    private $baseCrustUrl;
     public function __construct()
     {
         $this->baseUrl = env('BASE_URL');
         $this->callBackSecret = env('CALL_BACK_SECRET');
+        $this->baseNumeroUrl = env('NUMERO_BASE_URL');
+        $this->provider = env('INFLOW_PROVIDER');
+        $this->baseCrustUrl = env('CRUST_BASE_URL');
         $this->response = new DefaultApiResponse();
     }
 
@@ -64,35 +72,68 @@ class AgentWalletController extends Controller
 
     public function getMerchantPeer(MerchantPayRequest $request)
     {
-        try {
-            $walletGenerated = getMerchantPeer($this->baseUrl);
-            Log::info($walletGenerated);
-            if ($walletGenerated['success']){
-                $saveInflow = new Inflow();
-                Log::info($walletGenerated);
-                $saveInflow->saveInFlowRequest($walletGenerated, $request); 
-                $this->response->responseCode = '0';
-                $this->response->message = $walletGenerated['message'];
-                $this->response->isSuccessful = true;
-                $this->response->data = [
-                    "accountNumber" => $walletGenerated['accountNumber'],
-                    "accountName" => $walletGenerated['accountName'],
-                    "reference" => $walletGenerated['reference'],
-                    "bankName" => $walletGenerated['bankName'],
-                    "bankCode" => $walletGenerated['bankCode']
-                ];
-                return response()->json($this->response, 200);
-            }
-            $this->response->responseCode = '2';
-            $this->response->message = $walletGenerated['responseMessage'];
-            $this->response->isSuccessful = false;
-            return response()->json($this->response, 400);
-        } catch (\Exception $e) {
-            $this->response->message = 'Processing Failed, Contact Support';
-            Log::info(json_encode($e));
-            $this->response->error = $e->getMessage();
-            return response()->json($this->response, 500);
+        switch ($this->provider) {
+            case 'CHAKRA':
+                try {
+                    $walletGenerated = getMerchantPeer($this->baseUrl);
+                    Log::info($walletGenerated);
+                    if ($walletGenerated['success']){
+                        $saveInflow = new Inflow();
+                        Log::info($walletGenerated);
+                        $saveInflow->saveInFlowRequest($walletGenerated, $request); 
+                        $this->response->responseCode = '0';
+                        $this->response->message = $walletGenerated['message'];
+                        $this->response->isSuccessful = true;
+                        $this->response->data = [
+                            "accountNumber" => $walletGenerated['accountNumber'],
+                            "accountName" => $walletGenerated['accountName'],
+                            "reference" => $walletGenerated['reference'],
+                            "bankName" => $walletGenerated['bankName'],
+                            "bankCode" => $walletGenerated['bankCode']
+                        ];
+                        return response()->json($this->response, 200);
+                    }
+                    $this->response->responseCode = '2';
+                    $this->response->message = $walletGenerated['responseMessage'] || $walletGenerated['message'] ;
+                    $this->response->isSuccessful = false;
+                    return response()->json($this->response, 400);
+                } catch (\Exception $e) {
+                    $this->response->message = 'Processing Failed, Contact Support';
+                    Log::info(json_encode($e));
+                    $this->response->error = $e->getMessage();
+                    return response()->json($this->response, 500);
+                }
+                break;
+            case 'CRUST':
+                try {
+                    $data = getAccounts($this->baseCrustUrl);
+                    if ($data['success']) {
+                        $saveInflow = new Inflow();
+                        Log::info($data);
+                        $saveInflow->saveInFlowCrustRequest($data['data'], $request);
+                        $this->response->responseCode = '0';
+                        $this->response->message = $data['message'];
+                        $this->response->isSuccessful = true;
+                        $this->response->data = $data['data'];
+                        return response()->json($this->response, 200);
+        
+                    }
+                    $this->response->responseCode = '2';
+                    $this->response->message = $data['message'];
+                    $this->response->isSuccessful = false;
+                    return response()->json($this->response, 400);
+                } catch (\Exception $e) {
+                    $this->response->message = 'Processing Failed, Contact Support';
+                    Log::info(json_encode($e));
+                    $this->response->error = $e->getMessage();
+                    return response()->json($this->response, 500);
+                }
+                break;
+            default:
+                # code...
+                break;
         }
+        
     }
 
 
@@ -156,11 +197,11 @@ class AgentWalletController extends Controller
                     $inflow = new Inflow();
                     $fromDb = findInFlowbyReference($request->reference,$request->walletAccountNumber);
                     if (!empty($fromDb)) {
-                        $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
-                        Log::info('************response from application************' .  $response);
-                        $inflow->saveResponse($request, $response);
-                        if ($response->successful())
-                        {
+                        // $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
+                        // Log::info('************response from application************' .  $response);
+                        // $inflow->saveResponse($request, $response);
+                        // if ($response->successful())
+                        // {
                         if ($request->success) {
                             //update DB to be successful
                             $inflow->updateFromCallBackForSuccessfulTransaction($request);
@@ -176,7 +217,7 @@ class AgentWalletController extends Controller
                                     'responseMessage' => "Callback received"
                                 ], 200);
                             }
-                        }
+                        // }
                         
                     } else {
                         return  response([
@@ -201,6 +242,50 @@ class AgentWalletController extends Controller
     }
 
 
+    public function fundingCrustCallBack(CrustCallBackRequest $request)
+    {
+        try {
+            Log::info($request->all());
+            $inflow = new Inflow();
+            $fromDb = findInFlowbyReference($request->transactionNumber,$request->accountNumber);
+            if (!empty($fromDb)) {
+                // $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
+                // Log::info('************response from application************' .  $response);
+                // $inflow->saveResponse($request, $response);
+                // if ($response->successful())
+                // {
+                if ($request->status === "SUCCESSFUL") {
+                    //update DB to be successful
+                    $inflow->updateFromCallBackForSuccessfulCrustTransaction($request);
+                    return  response([
+                        'responseCode' => "00",
+                        'responseMessage' => "Callback received"
+                    ], 200);
+                    } else {
+                        $inflow->updateFromCallBackForFailedCrustTransaction($request);
+
+                        return  response([
+                            'responseCode' => "00",
+                            'responseMessage' => "Callback received"
+                        ], 200);
+                    }
+                
+            } else {
+                return  response([
+                    'responseCode' => "1",
+                    'responseMessage' => "Not Found"
+                ], 400);
+            } 
+        
+            
+            
+        } catch (\Exception $e) {
+            $this->response->message = 'Processing Failed, Contact Support';
+            Log::info(json_encode($e));
+            $this->response->error = $e->getMessage();
+            return response()->json($this->response, 500);
+        }
+    }
 
     public function alertUrl(AlertRequest $request)
     {
@@ -229,6 +314,29 @@ class AgentWalletController extends Controller
             $this->response->error = $e->getMessage();
             return response()->json($this->response, 500);
         }
+    }
+
+
+    public function createVirtualAccountNumero(NumeroAccountCreationRequest $request)
+    {
+        try {
+            $data = numeroCreateAccount($request, $this->baseNumeroUrl);
+            $wallet = new Wallet();
+            $result = $wallet->AddWalletNumero($data, $request);
+            $decodeData = json_decode($data);
+            $this->response->responseCode = '0';
+            $this->response->isSuccessful = true;
+            $this->response->data = $decodeData;
+            return response()->json($this->response, 200);
+        } catch (\Exception $e) {
+            $this->response->message = 'Processing Failed, Contact Support';
+            Log::info(json_encode($e));
+            $this->response->error = $e->getMessage();
+            return response()->json($this->response, 500);
+        }
+        
+
+
     }
 
 

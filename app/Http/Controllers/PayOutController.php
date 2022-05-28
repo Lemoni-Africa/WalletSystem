@@ -21,67 +21,99 @@ class PayOutController extends Controller
     private $baseCrustUrl;
     private $callBackSecret;
     private $response;
+    private $provider;
+    private $baseNumeroUrl; 
     public function __construct()
     {
         $this->baseUrl = env('BASE_URL');
         $this->baseCrustUrl = env('CRUST_BASE_URL');
         $this->callBackSecret = env('CALL_BACK_SECRET');
+        $this->provider = env('PROVIDER');
+        $this->baseNumeroUrl = env('NUMERO_BASE_URL');
         $this->response = new DefaultApiResponse();
     }
 
     public function quickPay(QuickPayoutRequest $request)
     {
-        try {
-            $response = [
-                'isSuccess' =>  false,
-                'responseCode' => null,
-                'data'=> null,
-                'message' => null,
-            ];
-            
-            $data = chakraPayOut($request, $this->baseUrl);
-            if ($data['responseCode'] == "00") {
-               
-
-                $payout = new Payout();
-                $result = $payout->AddPayOut($data);
-                Log::info(json_encode($result));
-                sleep(25);
-                $getStatus = $this->checkStatus($result->transactionId);
-                if ($getStatus['data']['transferStatus'] === "SUCCESSFUL") {
-                    $payout->UpdateSuccessfulPayOut($getStatus);
-                    $response['responseCode'] = '0';
-                    $response['message'] = $getStatus['data']['creditProcessedStatus'];
-                    $response['isSuccess'] = true;
-                    $response['data'] = [
-                        'transactionRef' => $data['data']['merchantReference']
+        switch ($this->provider) {
+            case 'CHAKRA':
+                try {
+                    $response = [
+                        'isSuccess' =>  false,
+                        'responseCode' => null,
+                        'data'=> null,
+                        'message' => null,
                     ];
-                    
-                    return response()->json($response, 200);
+                    $data = chakraPayOut($request, $this->baseUrl);
+                    if ($data['responseCode'] == "00") {
+                       
+        
+                        $payout = new Payout();
+                        $result = $payout->AddPayOut($data);
+                        Log::info(json_encode($result));
+                        sleep(30);
+                        $getStatus = $this->checkStatus($result->transactionId);
+                        Log::info($getStatus);
+                        if ($getStatus['data']['transferStatus'] === "SUCCESSFUL") {
+                            $payout->UpdateSuccessfulPayOut($getStatus);
+                            $response['responseCode'] = '0';
+                            $response['message'] = $getStatus['data']['creditProcessedStatus'];
+                            $response['isSuccess'] = true;
+                            $response['data'] = [
+                                'transactionRef' => $data['data']['merchantReference']
+                            ];
+                            
+                            return response()->json($response, 200);
+                        }
+                        Log::info($getStatus);
+                        $payout->UpdateFailedPayOut($getStatus);
+                        $response['responseCode'] = '1';
+                        $response['message'] =   $getStatus['data']["creditProcessedStatus"];
+                        $response['isSuccess'] = false;
+                        $response['data'] = [
+                            'transactionRef' => $data['data']['merchantReference']
+                        ];
+                        return response()->json($response, 200);
+                        
+                    }
+                    $response['responseCode'] = '2';
+                    $response['message'] = $data['responseMessage'];
+                    $response['isSuccess'] = false;
+                    return response()->json($response, 400);
+        
+                } catch (\Exception $e) {
+                    return response([
+                        'isSuccesful' => false,
+                        'message' => 'Processing Failed, Contact Support',
+                        'error' => $e->getMessage()
+                    ]);
                 }
-                Log::info($getStatus);
-                $payout->UpdateFailedPayOut($getStatus);
-                $response['responseCode'] = '1';
-                $response['message'] =   $getStatus['data']["creditProcessedStatus"];
-                $response['isSuccess'] = false;
-                $response['data'] = [
-                    'transactionRef' => $data['data']['merchantReference']
-                ];
-                return response()->json($response, 200);
-                
-            }
-            $response['responseCode'] = '2';
-            $response['message'] = $data['responseMessage'];
-            $response['isSuccess'] = false;
-            return response()->json($response, 400);
-
-        } catch (\Exception $e) {
-            return response([
-                'isSuccesful' => false,
-                'message' => 'Processing Failed, Contact Support',
-                'error' => $e->getMessage()
-            ]);
+                break;
+            case 'NUMERO':
+                try {
+                    $data = numeroPayOut($request, $this->baseNumeroUrl);
+                    if ($data['status']) {
+                        $details = numeroValidateAccount($request, $this->baseNumeroUrl);
+                        $payout = new Payout();
+                        $result = $payout->AddPayOutNumero($data, $request, $details);
+                        $this->response->responseCode = '0';
+                        $this->response->message = $data['message'];
+                        $this->response->isSuccessful = true;
+                        $this->response->data = $data['data'];
+                        return response()->json($this->response, 200);
+                    }
+                } catch (\Exception $e) {
+                    $this->response->message = 'Processing Failed, Contact Support';
+                    Log::info(json_encode($e));
+                    $this->response->error = $e->getMessage();
+                    return response()->json($this->response, 500);
+                }
+                break;
+            default:
+                # code...
+                break;
         }
+        
         
     }
 
@@ -174,40 +206,6 @@ class PayOutController extends Controller
     }
 
 
-    public function getAccountName(ResolveBankNameRequest $request)
-    {
-        try {
-            $response = [
-                'isSuccess' =>  false,
-                'responseCode' => null,
-                'data'=> null,
-                'message' => null,
-            ];
-            $data = getAccountName($request, $this->baseCrustUrl);
-            Log::info($data);
-            if ($data['success']) {
-                $response['responseCode'] = '0';
-                $response['message'] = $data['message'];
-                $response['isSuccess'] = true;
-                $response['data'] = $data['data'];
-
-                return response()->json($response, 200);
-            }
-            $response['responseCode'] = '1';
-            $response['message'] = $data['message'];
-            $response['isSuccess'] = false;
-            $response['data'] = $data['data'];
-
-            return response()->json($response, 400);
-        } catch (\Exception $e) {
-            return response([
-                'isSuccesful' => false,
-                'message' => 'Processing Failed, Contact Support',
-                'error' => $e->getMessage()
-            ]);
-        }
-        
-    }
 
     private function getAccountDetails($bankCode, $accountNumber)
     {
@@ -243,69 +241,62 @@ class PayOutController extends Controller
         }
         
     }
-    // public function payoutCallBack(ChakraPayoutCallBackRequest $request)
-    // {
-    //     try {
-    //         Log::info($request->all());
-    //         if ($request->hasHeader('x-payout-signature')) {
-    //             $payoutSignature = $request->header('x-payout-signature');
-    //             $request->headers->set('Content-Type', 'application/json');
-    //             // $jsonEncodedPayload = json_encode($request->all());
-    //             $hashedPayload = hash_hmac("sha512", json_encode($request->all()) , $this->callBackSecret);
-    //             Log::info($hashedPayload);
-    //             if($hashedPayload != $payoutSignature)
-    //             {
-    //                 $this->response->responseCode = '1';
-    //                 $this->response->message = "Invalid Signature";                    
-    //                 return response()->json($this->response, 401);
-    //             }else{
+  
+    public function numeroPayOut(QuickPayoutRequest $request)
+    {
+        try {
+            $response = [
+                'isSuccess' =>  false,
+                'responseCode' => null,
+                'data'=> null,
+                'message' => null,
+            ];
+            
+
+
+            $data = numeroPayOut($request, $this->baseNumeroUrl);
+            if ($data['status']) {
+               return Log::info($data);
+
+                $payout = new Payout();
+                $result = $payout->AddPayOut($data);
+                Log::info(json_encode($result));
+                sleep(25);
+                $getStatus = $this->checkStatus($result->transactionId);
+                if ($getStatus['data']['transferStatus'] === "SUCCESSFUL") {
+                    $payout->UpdateSuccessfulPayOut($getStatus);
+                    $response['responseCode'] = '0';
+                    $response['message'] = $getStatus['data']['creditProcessedStatus'];
+                    $response['isSuccess'] = true;
+                    $response['data'] = [
+                        'transactionRef' => $data['data']['merchantReference']
+                    ];
                     
-    //                 $inflow = new Inflow();
-    //                 $fromDb = findInFlowbyReference($request->reference,$request->walletAccountNumber);
-    //                 if (!empty($fromDb)) {
-    //                     $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
-    //                     Log::info('************response from application************' .  $response);
-    //                     $inflow->saveResponse($request, $response);
-    //                     if ($response->successful())
-    //                     {
-    //                     if ($request->success) {
-    //                         //update DB to be successful
-    //                         $inflow->updateFromCallBackForSuccessfulTransaction($request);
-    //                         return  response([
-    //                             'responseCode' => "00",
-    //                             'responseMessage' => "Callback received"
-    //                         ], 200);
-    //                         } else {
-    //                             $inflow->updateFromCallBackForFailedTransaction($request);
-        
-    //                             return  response([
-    //                                 'responseCode' => "00",
-    //                                 'responseMessage' => "Callback received"
-    //                             ], 200);
-    //                         }
-    //                     }
-                        
-    //                 } else {
-    //                     return  response([
-    //                         'responseCode' => "1",
-    //                         'responseMessage' => "Not Found"
-    //                     ], 400);
-    //                 } 
-    //             }             
-    //         }else{
-    //             $this->response->responseCode = '1';
-    //             $this->response->message = "Invalid Signature";                    
-    //             return response()->json($this->response, 401);
-    //         }
-            
-            
-    //     } catch (\Exception $e) {
-    //         $this->response->message = 'Processing Failed, Contact Support';
-    //         Log::info(json_encode($e));
-    //         $this->response->error = $e->getMessage();
-    //         return response()->json($this->response, 500);
-    //     }
-    
-    // }
+                    return response()->json($response, 200);
+                }
+                Log::info($getStatus);
+                $payout->UpdateFailedPayOut($getStatus);
+                $response['responseCode'] = '1';
+                $response['message'] =   $getStatus['data']["creditProcessedStatus"];
+                $response['isSuccess'] = false;
+                $response['data'] = [
+                    'transactionRef' => $data['data']['merchantReference']
+                ];
+                return response()->json($response, 200);
+                
+            }
+            $response['responseCode'] = '2';
+            $response['message'] = $data['responseMessage'];
+            $response['isSuccess'] = false;
+            return response()->json($response, 400);
+
+        } catch (\Exception $e) {
+            return response([
+                'isSuccesful' => false,
+                'message' => 'Processing Failed, Contact Support',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 
 }

@@ -5,6 +5,7 @@ enum Providers : string
 {
     case CHAKRA = 'Chakra';
     case CRUST = 'Crust';
+    case NUMERO = 'Numero';
 }
 
 enum TransactionStatus : string

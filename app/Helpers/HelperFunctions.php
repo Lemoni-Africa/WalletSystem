@@ -162,7 +162,7 @@ function httpPostRequest2($url, $body, $auth)
         'accept' => 'application/json',
         'Authorization' => $auth
     ])->post($url, $body);
-
+        // Log::info($data);
     return $data;
 }
 function chakraPayOut($request, $baseUrl)
@@ -193,6 +193,75 @@ function chakraPayOut($request, $baseUrl)
     
 }
 
+function numeroPayOut($request, $baseUrl)
+{
+    $merchantRef = generateMerchantRef();
+    $url = "{$baseUrl}/transfer/initiateTransfer";
+    $header = 'Bearer ' .env('AUTH_KEY_NUMERO');
+    $validatedAccountNumber = numeroValidateAccount($request, $baseUrl);
+    $body = [
+        'amount' => $request->amount,
+        'currency' => env('CURRENCY'),
+        'narration' => "Sent " . $request->amount . " to " . $request->beneficiaryAccountNumber,
+        'debitAccount' => env('DEBIT_ACCOUNT_NUMERO'),
+        'transactionReference' => $merchantRef,
+        'recipientBankCode' => $request->beneficiaryBankCode,
+        'recipientAccountNumber' => $request->beneficiaryAccountNumber,
+        // "accountName" => "Adebayo Taju",
+        "accountName" => $validatedAccountNumber['data']['account_name'],
+        "originatorName" => env('ORIGINATOR_NAME_NUMERO')
+    ];
+    Log::info($body);
+    return httpPostRequest2($url, $body, $header);
+}
+
+function numeroValidateAccount($request, $baseUrl)
+{
+    $url = "{$baseUrl}/transfer/validateAccountNumber";
+    $header = 'Bearer ' .env('AUTH_KEY_NUMERO');
+    // get the password and decrpty
+    $body = [
+        'accountNumber' => $request->beneficiaryAccountNumber,
+        'bankCode' => $request->beneficiaryBankCode,
+    ];
+    // Log::info(httpPostRequest2($url, $body, $header));
+    return httpPostRequest2($url, $body, $header);
+}
+
+function numeroCreateAccount($request, $baseUrl)
+{
+    if ($request->accountType == "One time") {
+        $url = "{$baseUrl}/account/assignDynamicAccount";
+        $header = 'Bearer ' .env('AUTH_KEY_NUMERO');
+        // get the password and decrpty
+        $body = [
+            'accountName' => $request->accountName,
+            'bvn' => $request->bvn,
+            'accountUserNatureOfBusiness' => $request->accountUserNatureOfBusiness,
+            'bankCode' => $request->bankCode,
+            'accountType' => $request->accountType,
+        ];
+        // Log::info(httpPostRequest2($url, $body, $header));
+        return httpPostRequest2($url, $body, $header);
+    }
+    if ($request->accountType == "Reserved") {
+        $url = "{$baseUrl}/account/assignReservedAccount";
+        $header = 'Bearer ' .env('AUTH_KEY_NUMERO');
+        // get the password and decrpty
+        $body = [
+            'accountName' => $request->accountName,
+            'bvn' => $request->bvn,
+            'accountUserNatureOfBusiness' => $request->accountUserNatureOfBusiness,
+            'bankCode' => $request->bankCode,
+            'accountType' => $request->accountType,
+        ];
+        // Log::info(httpPostRequest2($url, $body, $header));
+        return httpPostRequest2($url, $body, $header);
+    }
+    
+}
+
+
 
 function crustPayout($request, $baseUrl)
 {
@@ -215,6 +284,18 @@ function getAccountName($request, $baseUrl)
         'accountnumber' => $request->accountnumber,
         'bankcode' => $request->bankcode
     ];
+    return httpPostRequest2($url, $body, $header);
+}
+
+function getAccountNameNumero($request, $baseUrl)
+{
+    $url = "{$baseUrl}/transfer/validateAccountNumber";
+    $header = 'Bearer ' .env('AUTH_KEY_NUMERO');
+    $body = [
+        'accountNumber' => $request->accountnumber,
+        'bankCode' => $request->bankcode
+    ];
+    Log::info($body);
     return httpPostRequest2($url, $body, $header);
 }
 
@@ -319,6 +400,7 @@ function findInFlowbyReference($reference,$walletNumber)
     return Inflow::where('reference', $reference)->where('accountNumber', $walletNumber)->where('status', TransactionStatus::PENDING->value)->first();
 }
 
+
 //find infiow here referece, wallter number, status pending
 
 function findByRefernceAndCustomerId($reference, $customerId)
@@ -361,6 +443,17 @@ function getBanks($baseUrl)
 {
     $header = env('CRUST_HEADER');
     $url = "{$baseUrl}/api/bank-list";
+    return Http::withHeaders([
+        'Authorization' => $header
+    ])->get($url);
+}
+
+function getBanksNumero($baseUrl)
+{
+    // $url = "{$baseUrl}/transfer/getBanks";
+    $header = 'Bearer ' .env('AUTH_KEY_NUMERO');
+    // $header = env('CRUST_HEADER');
+    $url = "{$baseUrl}/transfer/getBanks";
     return Http::withHeaders([
         'Authorization' => $header
     ])->get($url);

@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use gender;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Providers;
 
 class Wallet extends Model
 {
@@ -40,6 +42,19 @@ class Wallet extends Model
         $this->bankCode = $data['data']['bankCode'];
         $this->dateCreated = $data['data']['dateCreated'];
         $this->lastActivityDate = $data['data']['lastActivityDate'];
+        $this->provider = Providers::CHAKRA->value;
+        $this->save();
+    }
+
+    public function AddWalletNumero($data, $request) 
+    {
+        $this->bvn = $request->bvn;
+        $this->currency = 'NGN';
+        $this->bankCode = $request->bankCode;
+        $this->dateCreated = Carbon::now();
+        $this->provider = Providers::NUMERO->value;
+        $this->accountNumber = $data['account_number'];
+        $this->accountName = $data['account_name'];
         $this->save();
     }
 }

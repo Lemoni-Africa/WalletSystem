@@ -15,24 +15,28 @@ return new class extends Migration
     {
         Schema::create('wallets', function (Blueprint $table) {
             $table->id();
-            $table->string('requestId');
-            $table->string('merchantId');
-            $table->string('firstName');
-            $table->string('lastName');
-            $table->string('middleName');
-            $table->string('fullName');
-            $table->string('email');
-            $table->string('dob');
-            $table->string('pin');
-            $table->string('gender');
-            $table->string('phoneNumber');
-            $table->string('currency');
-            $table->boolean('bvnVerified');
-            $table->boolean('ninVerified');
-            $table->string('bankName');
-            $table->string('bankCode');
-            $table->string('dateCreated');
-            $table->string('lastActivityDate');
+            $table->string('requestId')->nullable();
+            $table->string('merchantId')->nullable();
+            $table->string('firstName')->nullable();
+            $table->string('lastName')->nullable();
+            $table->string('middleName')->nullable();
+            $table->string('fullName')->nullable();
+            $table->string('email')->nullable();
+            $table->string('dob')->nullable();
+            $table->string('pin')->nullable();
+            $table->string('gender')->nullable();
+            $table->string('phoneNumber')->nullable();
+            $table->string('currency')->nullable();
+            $table->boolean('bvnVerified')->nullable();
+            $table->boolean('ninVerified')->nullable();
+            $table->string('bankName')->nullable();
+            $table->string('bankCode')->nullable();
+            $table->string('dateCreated')->nullable();
+            $table->string('lastActivityDate')->nullable();
+            $table->string('accountNumber')->nullable();
+            $table->string('accountName')->nullable();
+            $table->string('bvn')->nullable();
+            $table->string('provider');
             $table->timestamps();
         });
     }

@@ -47,6 +47,25 @@ class Inflow extends Model
         return $this;
     }
 
+    public function saveInFlowCrustRequest($data, $request) 
+    {
+        $this->customerId = $request->customerId;
+        $this->request_amount = $request->amount;
+        $this->callback_url = $request->callbackUrl;
+        // $this->received_amount = $data['received_amount'];
+        $this->accountNumber = $data['accountNumber'];
+        $this->accountName = "";
+        $this->bankName = '';
+        $this->bankCode = '';
+        $this->reference = $data['transactionNumber'];
+        $this->request_time = Carbon::now();
+        $this->provider = Providers::CRUST->value;
+        $this->status = TransactionStatus::PENDING->value;
+        $this->save();
+
+        return $this;
+    }
+
     public function updateFromCallBackForFailedTransaction($request) 
     {
         $updateDetails = [
@@ -86,6 +105,28 @@ class Inflow extends Model
         ];
        DB::table('inflows')->where('reference', $request->reference)->where('accountNumber', $request->walletNumber)->update($updateDetails);
               
+    }
+
+    public function updateFromCallBackForSuccessfulCrustTransaction($request)
+    {
+        $updateDetails = [
+            'received_amount' => $request->amount,
+            'walletAccountNumber' => $request->accountNumber,
+            'time_of_verification' => Carbon::now(),
+            'status' => TransactionStatus::COMPLETED->value,
+        ];
+       DB::table('inflows')->where('reference', $request->transactionNumber)->where('accountNumber', $request->accountNumber)->update($updateDetails);
+              
+    }
+    public function updateFromCallBackForFailedCrustTransaction($request) 
+    {
+        $updateDetails = [
+            'received_amount' => $request->amount,
+            'walletAccountNumber' => $request->accountNumber,
+            'time_of_verification' => Carbon::now(),
+            'status' => TransactionStatus::FAILED->value
+        ];
+        DB::table('inflows')->where('reference', $request->transactionNumber)->where('accountNumber', $request->accountNumber)->update($updateDetails);
     }
 
     public function saveResponse($request, $response)

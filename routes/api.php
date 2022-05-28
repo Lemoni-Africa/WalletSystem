@@ -26,7 +26,7 @@ Route::group(array('prefix' => 'auth' ), function () {
 Route::group(array('prefix' => 'payout' ), function () {
     Route::post('quick', [PayOutController::class, 'quickPay']);
     Route::post('quickCrust', [PayOutController::class, 'quickPayCrust']);
-    Route::post('getAccountName', [PayOutController::class, 'getAccountName']);
+    
     Route::get('status/{transactionId}', [PayOutController::class, 'payOutStatus']);
     Route::post('bankEnquiry', [PayOutController::class, 'makeEnquiry']);
     Route::get('transactions', [PayOutController::class, 'getTransactionList']);
@@ -36,6 +36,7 @@ Route::group(array('prefix' => 'bank' ), function () {
     Route::get('bankList', [BankListController::class, 'getBankList']);
     Route::get('bankBalance', [BankListController::class, 'getBalance']);
     Route::get('bankAccounts', [BankListController::class, 'getAccounts']);
+    Route::post('getAccountName', [BankListController::class, 'getAccountName']);
 });
 
 Route::group(array('prefix' => 'wallet' ), function () {
@@ -43,7 +44,9 @@ Route::group(array('prefix' => 'wallet' ), function () {
     Route::post('getWallet', [AgentWalletController::class, 'getMerchantPeer']);
     Route::get('getMerchantBalance', [AgentWalletController::class, 'getMerchantBalance']);
     Route::post('fundingCallBack', [AgentWalletController::class, 'fundingCallBack']);
+    Route::post('callBackCrust', [AgentWalletController::class, 'fundingCrustCallBack']);
     Route::post('alert', [AgentWalletController::class, 'alertUrl']);
+    Route::post('createNumeroAccount', [AgentWalletController::class, 'createVirtualAccountNumero']);
 });
 
 
