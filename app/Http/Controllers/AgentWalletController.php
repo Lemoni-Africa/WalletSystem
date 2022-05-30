@@ -204,7 +204,7 @@ class AgentWalletController extends Controller
                     if (!empty($fromDb)) {
                         $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
                         Log::info('************response from application from indians ************' .  $response);
-                        $inflow->saveResponse($request, $response);
+                        $inflow->saveResponse($response, $fromDb);
                         if ($response->successful())
                         {
                         if ($request->success) {

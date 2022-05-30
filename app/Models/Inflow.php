@@ -119,12 +119,10 @@ class Inflow extends Model
         $fromDb->save();
     }
 
-    public function saveResponse($request, $response)
+    public function saveResponse($response, $fromDb)
     {
-        $updateDetails = [
-            'application_response' => json_encode($response)
-        ];
-        DB::table('inflows')->where('reference', $request->reference)->where('accountNumber', $request->walletNumber)->update($updateDetails);
+        $fromDb->application_response = json_encode($response);
+        $fromDb->save();
               
     }
 }
