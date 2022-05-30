@@ -202,28 +202,26 @@ class AgentWalletController extends Controller
                     $inflow = new Inflow();
                     $fromDb = findInFlowbyReference($request->reference,$request->walletAccountNumber);
                     if (!empty($fromDb)) {
-                        $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
-                        Log::info('************response from application from indians ************' .  $response);
-                        $inflow->saveResponse($response, $fromDb);
-                        if ($response->successful())
-                        {
                         if ($request->success) {
                             //update DB to be successful
                             $inflow->updateFromCallBackForSuccessfulTransaction($fromDb, $request);
+                            $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
+                            Log::info('************response from application from indians ************' .  $response);
+                            $inflow->saveResponse($response, $fromDb);
                             return  response([
                                 'responseCode' => "00",
                                 'responseMessage' => "Callback received"
                             ], 200);
                             } else {
                                 $inflow->updateFromCallBackForFailedTransaction($fromDb, $request);
-        
+                                $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
+                                Log::info('************response from application from indians ************' .  $response);
+                                $inflow->saveResponse($response, $fromDb);
                                 return  response([
                                     'responseCode' => "00",
                                     'responseMessage' => "Callback received"
                                 ], 200);
                             }
-                        }
-                        
                     } else {
                         return  response([
                             'responseCode' => "1",

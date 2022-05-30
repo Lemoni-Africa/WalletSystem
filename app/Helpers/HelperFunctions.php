@@ -427,9 +427,10 @@ function postToIndians($request, $id, $url)
     $body = [
         'customerId' => $id,
         'reference' => $request->reference,
-        'amount' => $request->amount,
+        'amount' => $request->creditAmount,
         'success' => $request->success
     ];
+    Log::info('****************** Indian Body ********************');
     Log::info(json_encode($body));
     // Log::info($body);
     $hashedPayload = hash_hmac("sha512", json_encode($body) , $callBackSecret);

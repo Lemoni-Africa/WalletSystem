@@ -69,7 +69,7 @@ class Inflow extends Model
     public function updateFromCallBackForFailedTransaction($fromDb, $request) 
     {
         $fromDb->action = $request->action;
-        $fromDb->received_amount = $request->amount;
+        $fromDb->received_amount = $request->creditAmount;
         $fromDb->fee = $request->fee;
         $fromDb->narration = $request->narration;
         $fromDb->srcAccountName = $request->srcAccountName;
@@ -87,7 +87,7 @@ class Inflow extends Model
     public function updateFromCallBackForSuccessfulTransaction($fromDb, $request)
     {
         $fromDb->action = $request->action;
-        $fromDb->received_amount = $request->amount;
+        $fromDb->received_amount = $request->creditAmount;
         $fromDb->fee = $request->fee;
         $fromDb->narration = $request->narration;
         $fromDb->srcAccountName = $request->srcAccountName;

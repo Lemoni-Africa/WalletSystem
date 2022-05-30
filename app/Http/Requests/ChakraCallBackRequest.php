@@ -26,6 +26,7 @@ class ChakraCallBackRequest extends FormRequest
         return [
             'action' => 'required',
             'amount' => 'required',
+            "creditAmount" => 'required', 
             'fee' => 'required',
             'narration' => 'required',
             'reference' => 'required',
