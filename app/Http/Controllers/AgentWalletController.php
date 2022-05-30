@@ -200,11 +200,11 @@ class AgentWalletController extends Controller
                     $inflow = new Inflow();
                     $fromDb = findInFlowbyReference($request->reference,$request->walletAccountNumber);
                     if (!empty($fromDb)) {
-                        // $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
-                        // Log::info('************response from application************' .  $response);
-                        // $inflow->saveResponse($request, $response);
-                        // if ($response->successful())
-                        // {
+                        $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
+                        Log::info('************response from application************' .  $response);
+                        $inflow->saveResponse($request, $response);
+                        if ($response->successful())
+                        {
                         if ($request->success) {
                             //update DB to be successful
                             $inflow->updateFromCallBackForSuccessfulTransaction($fromDb, $request);
@@ -220,7 +220,7 @@ class AgentWalletController extends Controller
                                     'responseMessage' => "Callback received"
                                 ], 200);
                             }
-                        // }
+                        }
                         
                     } else {
                         return  response([
