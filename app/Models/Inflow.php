@@ -121,7 +121,7 @@ class Inflow extends Model
 
     public function saveResponse($response, $fromDb)
     {
-        $fromDb->application_response = json_encode($response);
+        $fromDb->application_response = json_decode($response);
         $fromDb->save();
               
     }
