@@ -77,6 +77,8 @@ class AgentWalletController extends Controller
         switch ($this->provider) {
             case 'CHAKRA':
                 try {
+                    Log::info('**********Wallet Generated *************');
+                    Log::info($request->all());
                     $walletGenerated = getMerchantPeer($this->baseUrl);
                     Log::info($walletGenerated);
                     if ($walletGenerated['success']){
@@ -201,7 +203,7 @@ class AgentWalletController extends Controller
                     $fromDb = findInFlowbyReference($request->reference,$request->walletAccountNumber);
                     if (!empty($fromDb)) {
                         $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
-                        Log::info('************response from application************' .  $response);
+                        Log::info('************response from application from indians ************' .  $response);
                         $inflow->saveResponse($request, $response);
                         if ($response->successful())
                         {
