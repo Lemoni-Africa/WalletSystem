@@ -55,7 +55,7 @@ class Inflow extends Model
         // $this->received_amount = $data['received_amount'];
         $this->accountNumber = $data['accountNumber'];
         $this->accountName = "";
-        $this->bankName = '';
+        $this->bankName = $data['bankName'];
         $this->bankCode = '';
         $this->reference = $data['transactionNumber'];
         $this->request_time = Carbon::now();
