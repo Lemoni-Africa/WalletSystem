@@ -38,6 +38,8 @@ class PayOutController extends Controller
         switch ($this->provider) {
             case 'CHAKRA':
                 try {
+                    Log::info('**********PayOut from Chakra service *************');
+                    Log::info($request->all());
                     $response = [
                         'isSuccess' =>  false,
                         'responseCode' => null,
@@ -45,16 +47,16 @@ class PayOutController extends Controller
                         'message' => null,
                     ];
                     $data = chakraPayOut($request, $this->baseUrl);
+                    Log::info('data gotten' .$data);
                     if ($data['responseCode'] == "00") {
-                       
-        
                         $payout = new Payout();
                         $result = $payout->AddPayOut($data);
                         Log::info(json_encode($result));
                         sleep(30);
                         $getStatus = $this->checkStatus($result->transactionId);
-                        Log::info($getStatus);
+                        Log::info('check status of payout '.$getStatus);
                         if ($getStatus['data']['transferStatus'] === "SUCCESSFUL") {
+                            Log::info('Payout was successful');
                             $payout->UpdateSuccessfulPayOut($getStatus);
                             $response['responseCode'] = '0';
                             $response['message'] = $getStatus['data']['creditProcessedStatus'];
@@ -62,50 +64,76 @@ class PayOutController extends Controller
                             $response['data'] = [
                                 'transactionRef' => $data['data']['merchantReference']
                             ];
-                            
+                            Log::info('response gotten ' .$response);
                             return response()->json($response, 200);
                         }
-                        Log::info($getStatus);
+                        Log::info('check status of payout '.$getStatus);
                         $payout->UpdateFailedPayOut($getStatus);
+                        Log::info('Payout was unsuccessful');
                         $response['responseCode'] = '1';
                         $response['message'] =   $getStatus['data']["creditProcessedStatus"];
                         $response['isSuccess'] = false;
                         $response['data'] = [
                             'transactionRef' => $data['data']['merchantReference']
                         ];
+                        Log::info('response gotten ' .$response);
                         return response()->json($response, 200);
                         
+                    }
+                    if ($data['responseCode'] == "51") {
+                        $response['responseCode'] = '2';
+                        $response['message'] = $data['responseDescription'];
+                        $response['isSuccess'] = false;
+                        Log::info('response gotten ' .$response);
+                        return response()->json($response, 400);
                     }
                     $response['responseCode'] = '2';
                     $response['message'] = $data['responseMessage'];
                     $response['isSuccess'] = false;
+                    Log::info('response gotten ' .$response);
                     return response()->json($response, 400);
         
                 } catch (\Exception $e) {
                     return response([
                         'isSuccesful' => false,
                         'message' => 'Processing Failed, Contact Support',
-                        'error' => $e->getMessage()
+                        Log::info($e),
+                        // 'error' => $e->getMessage()
                     ]);
                 }
                 break;
             case 'NUMERO':
                 try {
+                    Log::info('**********PayOut from Numero service *************');
+                    Log::info($request->all());
                     $data = numeroPayOut($request, $this->baseNumeroUrl);
+                    $payout = new Payout();
+                    Log::info('***** data gotten ****' .$data);
                     if ($data['status']) {
+                        Log::info('Payout was successful');
                         $details = numeroValidateAccount($request, $this->baseNumeroUrl);
-                        $payout = new Payout();
                         $result = $payout->AddPayOutNumero($data, $request, $details);
                         $this->response->responseCode = '0';
                         $this->response->message = $data['message'];
                         $this->response->isSuccessful = true;
                         $this->response->data = $data['data'];
+                        Log::info('response gotten ' .$this->response);
                         return response()->json($this->response, 200);
                     }
+                    Log::info('Payout was unsuccessful');
+                    $details = numeroValidateAccount($request, $this->baseNumeroUrl);
+                    $result = $payout->AddFailedPayOutNumero($data, $request, $details);
+                    $this->response->responseCode = '1';
+                    $this->response->message = $data['message'];
+                    $this->response->isSuccessful = false;
+                    $this->response->data = $data['data'];
+                    Log::info('response gotten ' .$this->response);
+                    return response()->json($this->response, 400);
                 } catch (\Exception $e) {
                     $this->response->message = 'Processing Failed, Contact Support';
                     Log::info(json_encode($e));
                     $this->response->error = $e->getMessage();
+                    Log::info('response gotten ' .$this->response);
                     return response()->json($this->response, 500);
                 }
                 break;
@@ -260,8 +288,8 @@ class PayOutController extends Controller
 
                 $payout = new Payout();
                 $result = $payout->AddPayOut($data);
-                Log::info(json_encode($result));
-                sleep(25);
+                return Log::info(json_encode($result));
+                // sleep(25);
                 $getStatus = $this->checkStatus($result->transactionId);
                 if ($getStatus['data']['transferStatus'] === "SUCCESSFUL") {
                     $payout->UpdateSuccessfulPayOut($getStatus);

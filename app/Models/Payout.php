@@ -32,7 +32,26 @@ class Payout extends Model
         $this->totalCharge = $data['data']['charge'];
         $this->narration = $request->narration;
         $this->provider = Providers::NUMERO->value;
-        $this->transactionStatus = TransactionStatus::PENDING->value;
+        $this->transactionStatus = TransactionStatus::COMPLETED->value;
+        $this->save();
+
+        return $this;
+    }
+
+    public function AddFailedPayOutNumero($data, $request, $bankDetails) 
+    {
+        $this->merchantReference = $data['data']['transaction_reference'];
+        $this->paymentRef = $data['data']['transaction_reference'];
+        $this->srcAccountName = env('ORIGINATOR_NAME_NUMERO');
+        $this->srcAccountNumber = env('DEBIT_ACCOUNT_NUMERO');
+        $this->beneficiaryBankCode = $request->beneficiaryBankCode;
+        $this->beneficiaryAccountNumber = $request->beneficiaryAccountNumber;
+        $this->beneficiaryAccountName = $bankDetails['data']['account_name'];
+        $this->amount = $request->amount;
+        $this->totalCharge = $data['data']['charge'];
+        $this->narration = $request->narration;
+        $this->provider = Providers::NUMERO->value;
+        $this->transactionStatus = TransactionStatus::FAILED->value;
         $this->save();
 
         return $this;

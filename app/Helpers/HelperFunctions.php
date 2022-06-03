@@ -212,6 +212,7 @@ function numeroPayOut($request, $baseUrl)
         "originatorName" => env('ORIGINATOR_NAME_NUMERO')
     ];
     Log::info($body);
+    Log::info($validatedAccountNumber);
     return httpPostRequest2($url, $body, $header);
 }
 

@@ -43,25 +43,29 @@ class AgentWalletController extends Controller
     public function createWallet(CreateWalletRequest $request)
     {
         try {
+            Log::info('************ create wallet chakra ***************');
+            Log::info($request->all());
             $pin = generateRandomString();
             $data = createChakraWallet($request, $this->baseUrl, $pin);
-            // Log::info($data);
+            Log::info('data gotten after creation of wallet' .$data);
             if ($data['responseCode'] == "00") {
                 $wallet = new Wallet();
                 $encryptedPin = encryptPin($pin);
+                Log::info('************ save to database ***************');
                 $result = $wallet->AddWallet($data, $request, $encryptedPin);
-                Log::info($result);
 
                 $this->response->responseCode = '0';
                 $this->response->message = $data['responseMessage'];
                 $this->response->isSuccessful = true;
                 $this->response->data = $data['data'];
+                Log::info('response gotten after creation of wallet' .$this->response);
                 return response()->json($this->response, 200);
 
             }
             $this->response->responseCode = '2';
             $this->response->message = $data['responseMessage'];
             $this->response->isSuccessful = true;
+            Log::info('response gotten after creation of wallet' .$this->response);
             return response()->json($this->response, 200);
             
         } catch (\Exception $e) {
@@ -74,16 +78,16 @@ class AgentWalletController extends Controller
 
     public function getMerchantPeer(MerchantPayRequest $request)
     {
+        Log::info('************ get peer wallet endpoint ***************');
         switch ($this->provider) {
             case 'CHAKRA':
                 try {
-                    Log::info('**********Wallet Generated *************');
+                    Log::info('**********Get Peer from Chakra service *************');
                     Log::info($request->all());
                     $walletGenerated = getMerchantPeer($this->baseUrl);
-                    Log::info($walletGenerated);
+                    Log::info('data gotten ' .$walletGenerated);
                     if ($walletGenerated['success']){
                         $saveInflow = new Inflow();
-                        Log::info($walletGenerated);
                         $saveInflow->saveInFlowRequest($walletGenerated, $request); 
                         $this->response->responseCode = '0';
                         $this->response->message = $walletGenerated['message'];
@@ -95,36 +99,43 @@ class AgentWalletController extends Controller
                             "bankName" => $walletGenerated['bankName'],
                             "bankCode" => $walletGenerated['bankCode']
                         ];
+                        Log::info('response gotten ' .$this->response);
                         return response()->json($this->response, 200);
                     }
                     $this->response->responseCode = '2';
                     $this->response->message = $walletGenerated['responseMessage'] || $walletGenerated['message'] ;
                     $this->response->isSuccessful = false;
+                    Log::info('response gotten ' .$this->response);
                     return response()->json($this->response, 400);
                 } catch (\Exception $e) {
                     $this->response->message = 'Processing Failed, Contact Support';
                     Log::info(json_encode($e));
-                    $this->response->error = $e->getMessage();
+                    // $this->response->error = $e->getMessage();
                     return response()->json($this->response, 500);
                 }
                 break;
             case 'CRUST':
                 try {
+                    Log::info('**********Get Peer from Crust service *************');
+                    Log::info($request->all());
                     $data = getAccounts($this->baseCrustUrl);
+                    Log::info('data gotten ' .$data);
                     if ($data['success']) {
                         $saveInflow = new Inflow();
-                        Log::info($data);
+                        // Log::info($data);
                         $saveInflow->saveInFlowCrustRequest($data['data'], $request);
                         $this->response->responseCode = '0';
                         $this->response->message = $data['message'];
                         $this->response->isSuccessful = true;
                         $this->response->data = $data['data'];
+                        Log::info('response gotten ' .$this->response);
                         return response()->json($this->response, 200);
         
                     }
                     $this->response->responseCode = '2';
                     $this->response->message = $data['message'];
                     $this->response->isSuccessful = false;
+                    Log::info('response gotten ' .$this->response);
                     return response()->json($this->response, 400);
                 } catch (\Exception $e) {
                     $this->response->message = 'Processing Failed, Contact Support';
@@ -150,7 +161,9 @@ class AgentWalletController extends Controller
                 'data'=> null,
                 'message' => null,
             ];
+            Log::info('**********Get Merchant Balance  *************');
             $data = getMerchantBalance($this->baseUrl);
+            Log::info('data gotten ' .$data);
             $merchBalance = new MerchantBalance();
             if ($data['responseCode'] == "00"){
                 $accountFromDb = $this->checkAccountNumber($data['accountNumber']);
@@ -162,15 +175,18 @@ class AgentWalletController extends Controller
                 $response['message'] = $data['responseMessage'];
                 $response['isSuccess'] = true;
                 $response['data'] = json_decode($data) ;
+                Log::info('response gotten ' .$response);
                 return response()->json($response, 200);
             }
             $response['responseCode'] = '2';
             $response['message'] = $data['responseMessage'];
             $response['isSuccess'] = false;
-            $response['data'] = json_decode($data) ;
+            $response['data'] = json_decode($data);
+            Log::info('response gotten ' .$response);
             return response()->json($response, 400);
 
         } catch (\Exception $e) {
+            Log::info(json_encode($e));
             return response([
                 'isSuccesful' => false,
                 'message' => 'Processing Failed, Contact Support',
@@ -184,7 +200,7 @@ class AgentWalletController extends Controller
     public function fundingCallBack(ChakraCallBackRequest $request)
     {
         try {
-            Log::info('**********');
+            Log::info('********** callback Chakra *****');
             Log::info($request->all());
             if ($request->hasHeader('x-payout-signature')) {
                 $payoutSignature = $request->header('x-payout-signature');
@@ -195,15 +211,17 @@ class AgentWalletController extends Controller
                 if($hashedPayload != $payoutSignature)
                 {
                     $this->response->responseCode = '1';
-                    $this->response->message = "Invalid Signature";                    
+                    $this->response->message = "Invalid Signature"; 
+                    Log::info('response gotten ' .$this->response);                   
                     return response()->json($this->response, 401);
                 }else{
-                    
                     $inflow = new Inflow();
                     $fromDb = findInFlowbyReference($request->reference,$request->walletAccountNumber);
+                    Log::info('check if its on database ' .$fromDb);
                     if (!empty($fromDb)) {
                         if ($request->success) {
                             //update DB to be successful
+                            Log::info('****Transaction was successful****');
                             $inflow->updateFromCallBackForSuccessfulTransaction($fromDb, $request);
                             $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
                             Log::info('************response from application from indians ************' .  $response);
@@ -213,6 +231,7 @@ class AgentWalletController extends Controller
                                 'responseMessage' => "Callback received"
                             ], 200);
                             } else {
+                                Log::info('****Transaction failed ****');
                                 $inflow->updateFromCallBackForFailedTransaction($fromDb, $request);
                                 $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
                                 Log::info('************response from application from indians ************' .  $response);
@@ -231,7 +250,8 @@ class AgentWalletController extends Controller
                 }             
             }else{
                 $this->response->responseCode = '1';
-                $this->response->message = "Invalid Signature";                    
+                $this->response->message = "Invalid Signature";  
+                Log::info('response gotten ' .$this->response);                   
                 return response()->json($this->response, 401);
             }
             
@@ -248,30 +268,34 @@ class AgentWalletController extends Controller
     public function fundingCrustCallBack(CrustCallBackRequest $request)
     {
         try {
+            Log::info('********** callback Crust *****');
             Log::info($request->all());
             $inflow = new Inflow();
             $fromDb = findInFlowbyReference($request->transactionNumber,$request->accountNumber);
+            Log::info('check if its on database ' .$fromDb);
             if (!empty($fromDb)) {
-                // $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
-                // Log::info('************response from application************' .  $response);
-                // $inflow->saveResponse($request, $response);
-                // if ($response->successful())
-                // {
                 if ($request->status === "SUCCESSFUL") {
                     //update DB to be successful
+                    Log::info('****Transaction was successful****');
                     $inflow->updateFromCallBackForSuccessfulCrustTransaction($fromDb,$request);
+                    $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
+                    Log::info('************response from application from indians ************' .  $response);
+                    $inflow->saveResponse($response, $fromDb);
                     return  response([
                         'responseCode' => "00",
                         'responseMessage' => "Callback received"
                     ], 200);
                     } else {
-                        $inflow->updateFromCallBackForFailedCrustTransaction($fromDb,$request);
-
+                        Log::info('****Transaction failed ****');
+                        $inflow->updateFromCallBackForFailedCrustTransaction($fromDb, $request);
+                        $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
+                        Log::info('************response from application from indians ************' .  $response);
+                        $inflow->saveResponse($response, $fromDb);
                         return  response([
                             'responseCode' => "00",
                             'responseMessage' => "Callback received"
                         ], 200);
-                    }
+                }
                 
             } else {
                 return  response([
