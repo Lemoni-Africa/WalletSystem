@@ -84,6 +84,7 @@ class AgentWalletController extends Controller
                 try {
                     Log::info('**********Get Peer from Chakra service *************');
                     Log::info($request->all());
+                    $request->amount = "100";
                     $walletGenerated = getMerchantPeer($this->baseUrl);
                     Log::info('data gotten ' .$walletGenerated);
                     if ($walletGenerated['success']){
@@ -119,6 +120,7 @@ class AgentWalletController extends Controller
                     Log::info('**********Get Peer from Crust service *************');
                     Log::info($request->all());
                     $data = getAccounts($this->baseCrustUrl);
+                    $request->amount = "100";
                     Log::info('data gotten ' .$data);
                     if ($data['success']) {
                         $saveInflow = new Inflow();

@@ -64,7 +64,7 @@ class PayOutController extends Controller
                             $response['data'] = [
                                 'transactionRef' => $data['data']['merchantReference']
                             ];
-                            Log::info('response gotten ' .$response);
+                            Log::info('response gotten ' .json_encode($response));
                             return response()->json($response, 200);
                         }
                         Log::info('check status of payout '.$getStatus);
@@ -76,7 +76,7 @@ class PayOutController extends Controller
                         $response['data'] = [
                             'transactionRef' => $data['data']['merchantReference']
                         ];
-                        Log::info('response gotten ' .$response);
+                        Log::info('response gotten ' .json_encode($response));
                         return response()->json($response, 200);
                         
                     }
@@ -84,20 +84,20 @@ class PayOutController extends Controller
                         $response['responseCode'] = '2';
                         $response['message'] = $data['responseDescription'];
                         $response['isSuccess'] = false;
-                        Log::info('response gotten ' .$response);
+                        Log::info('response gotten ' .json_encode($response));
                         return response()->json($response, 400);
                     }
                     $response['responseCode'] = '2';
                     $response['message'] = $data['responseMessage'];
                     $response['isSuccess'] = false;
-                    Log::info('response gotten ' .$response);
+                    Log::info('response gotten ' .json_encode($response));
                     return response()->json($response, 400);
         
                 } catch (\Exception $e) {
                     return response([
                         'isSuccesful' => false,
                         'message' => 'Processing Failed, Contact Support',
-                        Log::info($e),
+                        Log::info(json_encode($e)),
                         // 'error' => $e->getMessage()
                     ]);
                 }
@@ -117,7 +117,7 @@ class PayOutController extends Controller
                         $this->response->message = $data['message'];
                         $this->response->isSuccessful = true;
                         $this->response->data = $data['data'];
-                        Log::info('response gotten ' .$this->response);
+                        Log::info('response gotten ' .json_encode($this->response));
                         return response()->json($this->response, 200);
                     }
                     Log::info('Payout was unsuccessful');
@@ -127,13 +127,13 @@ class PayOutController extends Controller
                     $this->response->message = $data['message'];
                     $this->response->isSuccessful = false;
                     $this->response->data = $data['data'];
-                    Log::info('response gotten ' .$this->response);
+                    Log::info('response gotten ' .json_encode($this->response));
                     return response()->json($this->response, 400);
                 } catch (\Exception $e) {
                     $this->response->message = 'Processing Failed, Contact Support';
                     Log::info(json_encode($e));
                     $this->response->error = $e->getMessage();
-                    Log::info('response gotten ' .$this->response);
+                    Log::info('response gotten ' .json_encode($this->response));
                     return response()->json($this->response, 500);
                 }
                 break;

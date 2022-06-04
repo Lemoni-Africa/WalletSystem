@@ -25,7 +25,7 @@ class MerchantPayRequest extends FormRequest
     {
         return [
             'customerId' => 'required',
-            'amount' => 'required',
+            // 'amount' => 'required',
             'callbackUrl' => 'required'
         ];
     }
