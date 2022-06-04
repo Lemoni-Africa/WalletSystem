@@ -58,14 +58,14 @@ class AgentWalletController extends Controller
                 $this->response->message = $data['responseMessage'];
                 $this->response->isSuccessful = true;
                 $this->response->data = $data['data'];
-                Log::info('response gotten after creation of wallet' .$this->response);
+                Log::info('response gotten after creation of wallet' .json_encode($this->response));
                 return response()->json($this->response, 200);
 
             }
             $this->response->responseCode = '2';
             $this->response->message = $data['responseMessage'];
             $this->response->isSuccessful = true;
-            Log::info('response gotten after creation of wallet' .$this->response);
+            Log::info('response gotten after creation of wallet' .json_encode($this->response));
             return response()->json($this->response, 200);
             
         } catch (\Exception $e) {
@@ -105,7 +105,7 @@ class AgentWalletController extends Controller
                     $this->response->responseCode = '2';
                     $this->response->message = $walletGenerated['responseMessage'] || $walletGenerated['message'] ;
                     $this->response->isSuccessful = false;
-                    Log::info('response gotten ' .$this->response);
+                    Log::info('response gotten ' .json_encode($this->response));
                     return response()->json($this->response, 400);
                 } catch (\Exception $e) {
                     $this->response->message = 'Processing Failed, Contact Support';
@@ -128,14 +128,14 @@ class AgentWalletController extends Controller
                         $this->response->message = $data['message'];
                         $this->response->isSuccessful = true;
                         $this->response->data = $data['data'];
-                        Log::info('response gotten ' .$this->response);
+                        Log::info('response gotten ' .json_encode($this->response));
                         return response()->json($this->response, 200);
         
                     }
                     $this->response->responseCode = '2';
                     $this->response->message = $data['message'];
                     $this->response->isSuccessful = false;
-                    Log::info('response gotten ' .$this->response);
+                    Log::info('response gotten ' .json_encode($this->response));
                     return response()->json($this->response, 400);
                 } catch (\Exception $e) {
                     $this->response->message = 'Processing Failed, Contact Support';
@@ -175,14 +175,14 @@ class AgentWalletController extends Controller
                 $response['message'] = $data['responseMessage'];
                 $response['isSuccess'] = true;
                 $response['data'] = json_decode($data) ;
-                Log::info('response gotten ' .$response);
+                Log::info('response gotten ' .json_encode($response));
                 return response()->json($response, 200);
             }
             $response['responseCode'] = '2';
             $response['message'] = $data['responseMessage'];
             $response['isSuccess'] = false;
             $response['data'] = json_decode($data);
-            Log::info('response gotten ' .$response);
+            Log::info('response gotten ' .json_encode($response));
             return response()->json($response, 400);
 
         } catch (\Exception $e) {
@@ -212,7 +212,7 @@ class AgentWalletController extends Controller
                 {
                     $this->response->responseCode = '1';
                     $this->response->message = "Invalid Signature"; 
-                    // Log::info('response gotten ' .$this->response);                   
+                    Log::info('response gotten ' .json_encode($this->response));                   
                     return response()->json($this->response, 401);
                 }else{
                     $inflow = new Inflow();
@@ -224,7 +224,7 @@ class AgentWalletController extends Controller
                             Log::info('****Transaction was successful****');
                             $inflow->updateFromCallBackForSuccessfulTransaction($fromDb, $request);
                             $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
-                            // Log::info('************response from application from indians ************' .  $response);
+                            Log::info('************response from application from indians ************' .  $response);
                             $inflow->saveResponse($response, $fromDb);
                             return  response([
                                 'responseCode' => "00",
@@ -234,7 +234,7 @@ class AgentWalletController extends Controller
                                 Log::info('****Transaction failed ****');
                                 $inflow->updateFromCallBackForFailedTransaction($fromDb, $request);
                                 $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
-                                // Log::info('************response from application from indians ************' .  $response);
+                                Log::info('************response from application from indians ************' .  $response);
                                 $inflow->saveResponse($response, $fromDb);
                                 return  response([
                                     'responseCode' => "00",
@@ -251,7 +251,7 @@ class AgentWalletController extends Controller
             }else{
                 $this->response->responseCode = '1';
                 $this->response->message = "Invalid Signature";  
-                Log::info('response gotten ' .$this->response);                   
+                Log::info('response gotten ' .json_encode($this->response));                   
                 return response()->json($this->response, 401);
             }
             
