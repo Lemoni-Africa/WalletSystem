@@ -212,19 +212,19 @@ class AgentWalletController extends Controller
                 {
                     $this->response->responseCode = '1';
                     $this->response->message = "Invalid Signature"; 
-                    Log::info('response gotten ' .$this->response);                   
+                    // Log::info('response gotten ' .$this->response);                   
                     return response()->json($this->response, 401);
                 }else{
                     $inflow = new Inflow();
                     $fromDb = findInFlowbyReference($request->reference,$request->walletAccountNumber);
-                    Log::info('check if its on database ' .$fromDb);
+                    // Log::info('check if its on database ' .$fromDb);
                     if (!empty($fromDb)) {
                         if ($request->success) {
                             //update DB to be successful
                             Log::info('****Transaction was successful****');
                             $inflow->updateFromCallBackForSuccessfulTransaction($fromDb, $request);
                             $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
-                            Log::info('************response from application from indians ************' .  $response);
+                            // Log::info('************response from application from indians ************' .  $response);
                             $inflow->saveResponse($response, $fromDb);
                             return  response([
                                 'responseCode' => "00",
@@ -234,7 +234,7 @@ class AgentWalletController extends Controller
                                 Log::info('****Transaction failed ****');
                                 $inflow->updateFromCallBackForFailedTransaction($fromDb, $request);
                                 $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
-                                Log::info('************response from application from indians ************' .  $response);
+                                // Log::info('************response from application from indians ************' .  $response);
                                 $inflow->saveResponse($response, $fromDb);
                                 return  response([
                                     'responseCode' => "00",
