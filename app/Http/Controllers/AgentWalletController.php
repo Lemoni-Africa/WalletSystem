@@ -99,7 +99,7 @@ class AgentWalletController extends Controller
                             "bankName" => $walletGenerated['bankName'],
                             "bankCode" => $walletGenerated['bankCode']
                         ];
-                        Log::info('response gotten ' .$this->response);
+                        Log::info('response gotten ' . json_encode($this->response));
                         return response()->json($this->response, 200);
                     }
                     $this->response->responseCode = '2';
