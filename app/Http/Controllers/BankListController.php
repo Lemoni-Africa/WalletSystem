@@ -13,11 +13,13 @@ class BankListController extends Controller
     private $response;
     private $provider;
     private $baseNumeroUrl;
+    private $bankEnv;
     public function __construct()
     {
         $this->baseCrustUrl = env('CRUST_BASE_URL');
         $this->provider = env('BANK_PROVIDER');
         $this->baseNumeroUrl = env('NUMERO_BASE_URL');
+        $this->bankEnv = env('BANK_ENV');
         $this->response = new DefaultApiResponse();
     }
     public function getBankList()
@@ -133,6 +135,10 @@ class BankListController extends Controller
         switch ($this->provider) {
             case 'CRUST':
                 try {
+                    if ($this->bankEnv === "TEST") {
+                        $request->accountnumber ="0125594645";
+                        $request->bankcode = "058";
+                    }
                     $data = getAccountName($request, $this->baseCrustUrl);
                     Log::info($data);
                     if ($data['success']) {
