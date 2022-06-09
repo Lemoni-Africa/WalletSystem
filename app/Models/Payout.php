@@ -38,6 +38,64 @@ class Payout extends Model
         return $this;
     }
 
+    public function AddPayOutCrust($data, $request, $bankDetails) 
+    {
+        $this->merchantReference = $data['data']['transactionNumber'];
+        $this->paymentRef = $data['data']['transactionNumber'];
+        $this->srcAccountName = $data['data']['recipientName'];
+        $this->srcAccountNumber = env('DEBIT_ACCOUNT_CRUST');
+        $this->beneficiaryBankCode = $request->beneficiaryBankCode;
+        $this->beneficiaryAccountNumber = $request->beneficiaryAccountNumber;
+        $this->beneficiaryAccountName = $bankDetails['data']['account_name'];
+        $this->amount = $request->amount;
+        $this->totalCharge = $data['data']['charges'];
+        $this->transferStatus = $data['data']['status'];
+        $this->narration = $data['data']['narration'];
+        $this->provider = Providers::CRUST->value;
+        $this->transactionStatus = TransactionStatus::COMPLETED->value;
+        $this->save();
+
+        return $this;
+    }
+    // {
+//     "success": true,
+//     "message": "Transfer Queued Successfully",
+//     "data": {
+//         "transactionNumber": "TMoni484786|20220609202713",
+//         "amount": 10.5,
+//         "charges": 25.0,
+//         "commission": 0.0,
+//         "type": "Transfer",
+//         "status": "Successful",
+//         "service": "Fund Transfer",
+//         "narration": "Sent 10.5 to 0125594645",
+//         "dateCreated": "2022-06-09T20:27:13.718+0000",
+//         "recipientName": "Lemoni Parent Account (058)",
+//         "recipientAccount": "0125594645",
+//         "recipientPhone": "",
+//         "initBalance": 2904.5,
+//         "balance": 2869.0
+//     }
+// }
+    public function AddFailedPayOutCrust($data, $request, $bankDetails) 
+    {
+        $this->merchantReference = $data['data']['transactionNumber'];
+        $this->paymentRef = $data['data']['transactionNumber'];
+        $this->srcAccountName = $data['data']['recipientName'];
+        $this->srcAccountNumber = env('DEBIT_ACCOUNT_CRUST');
+        $this->beneficiaryBankCode = $request->beneficiaryBankCode;
+        $this->beneficiaryAccountNumber = $request->beneficiaryAccountNumber;
+        $this->beneficiaryAccountName = $bankDetails['data']['account_name'];
+        $this->amount = $request->amount;
+        $this->totalCharge = $data['data']['charges'];
+        $this->transferStatus = $data['data']['status'];
+        $this->narration = $data['data']['narration'];
+        $this->provider = Providers::CRUST->value;
+        $this->transactionStatus = TransactionStatus::FAILED->value;
+        $this->save();
+
+        return $this;
+    }
     public function AddFailedPayOutNumero($data, $request, $bankDetails) 
     {
         $this->merchantReference = $data['data']['transaction_reference'];

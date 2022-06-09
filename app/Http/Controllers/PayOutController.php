@@ -71,13 +71,13 @@ class PayOutController extends Controller
                         $payout->UpdateFailedPayOut($getStatus);
                         Log::info('Payout was unsuccessful');
                         $response['responseCode'] = '1';
-                        $response['message'] =   $getStatus['data']["creditProcessedStatus"];
+                        $response['message'] =   $getStatus['data']["creditProcessedStatus"] ?? "Failed";
                         $response['isSuccess'] = false;
                         $response['data'] = [
                             'transactionRef' => $data['data']['merchantReference']
                         ];
                         Log::info('response gotten ' .json_encode($response));
-                        return response()->json($response, 200);
+                        return response()->json($response, 400);
                         
                     }
                     if ($data['responseCode'] == "51") {
@@ -98,7 +98,7 @@ class PayOutController extends Controller
                         'isSuccesful' => false,
                         'message' => 'Processing Failed, Contact Support',
                         Log::info(json_encode($e)),
-                        // 'error' => $e->getMessage()
+                        'error' => $e->getMessage()
                     ]);
                 }
                 break;
@@ -137,10 +137,70 @@ class PayOutController extends Controller
                     return response()->json($this->response, 500);
                 }
                 break;
+            case 'CRUST':
+                try {
+                    Log::info('**********PayOut from Crust service *************');
+                    Log::info($request->all());
+                    $data = crustPayout($request, $this->baseCrustUrl);
+                    $payout = new Payout();
+                    Log::info('***** data gotten ****' .$data);
+                    if ($data['success'] && $data['data']['status']=="Successful") {
+                        Log::info('Payout was successful');
+                        $details = validateAccountName($request, $this->baseCrustUrl);
+                        $result = $payout->AddPayOutCrust($data, $request, $details);
+                        $this->response->responseCode = '0';
+                        $this->response->message = $data['message'];
+                        $this->response->isSuccessful = true;
+                        $this->response->data = [
+                            'transactionRef' => $data['data']['transactionNumber']
+                        ];
+                        // $response['data'] = [
+                        //     'transactionRef' => $data['data']['transactionNumber']
+                        // ];
+                        Log::info('response gotten ' .json_encode($this->response));
+                        return response()->json($this->response, 200);
+                    }
+                    Log::info('Payout was unsuccessful');
+                    $details = validateAccountName($request, $this->baseNumeroUrl);
+                    $result = $payout->AddFailedPayOutCrust($data, $request, $details);
+                    $this->response->responseCode = '1';
+                    $this->response->message = $data['message'];
+                    $this->response->isSuccessful = false;
+                    $this->response->data = $data['data'];
+                    Log::info('response gotten ' .json_encode($this->response));
+                    return response()->json($this->response, 400);
+                } catch (\Exception $e)  {
+                    $this->response->message = 'Processing Failed, Contact Support';
+                    Log::info(json_encode($e));
+                    $this->response->error = $e->getMessage();
+                    Log::info('response gotten ' .json_encode($this->response));
+                    return response()->json($this->response, 500);
+                }
+                break;
             default:
-                # code...
                 break;
         }
+        
+// {
+//     "success": true,
+//     "message": "Transfer Queued Successfully",
+//     "data": {
+//         "transactionNumber": "TMoni484786|20220609202713",
+//         "amount": 10.5,
+//         "charges": 25.0,
+//         "commission": 0.0,
+//         "type": "Transfer",
+//         "status": "Successful",
+//         "service": "Fund Transfer",
+//         "narration": "Sent 10.5 to 0125594645",
+//         "dateCreated": "2022-06-09T20:27:13.718+0000",
+//         "recipientName": "Lemoni Parent Account (058)",
+//         "recipientAccount": "0125594645",
+//         "recipientPhone": "",
+//         "initBalance": 2904.5,
+//         "balance": 2869.0
+//     }
+// }
         
         
     }

@@ -184,7 +184,7 @@ function chakraPayOut($request, $baseUrl)
         'merchantRef' => $merchantRef,
         'sender' => $request->sender,
         'amount' => $request->amount,
-        'narration' => "Sent " . $request->amount . " to " . $request->beneficiaryAccountNumber,
+        'narration' => "Transaction " . $merchantRef,
         'pin' => $pin,
         'beneficiaryBankCode' => $request->beneficiaryBankCode,
         'beneficiaryAccountNumber' => $request->beneficiaryAccountNumber,
@@ -202,7 +202,7 @@ function numeroPayOut($request, $baseUrl)
     $body = [
         'amount' => $request->amount,
         'currency' => env('CURRENCY'),
-        'narration' => "Sent " . $request->amount . " to " . $request->beneficiaryAccountNumber,
+        'narration' => "Transaction " . $merchantRef,
         'debitAccount' => env('DEBIT_ACCOUNT_NUMERO'),
         'transactionReference' => $merchantRef,
         'recipientBankCode' => $request->beneficiaryBankCode,
@@ -266,16 +266,50 @@ function numeroCreateAccount($request, $baseUrl)
 
 function crustPayout($request, $baseUrl)
 {
+    $data = validateAccountName($request, $baseUrl);
+    if ($data['success']) {
+        $name = $data['data']['account_name'];
+        $header = env('CRUST_HEADER');
+        $url = "{$baseUrl}/api/debit";
+        $body = [
+            'accountName' => $name,
+            'amount' => $request->amount,
+            'narration' => "Sent " . $request->amount . " to " . $request->beneficiaryAccountNumber,
+            'bankCode' => $request->beneficiaryBankCode,
+            'accountNumber' => $request->beneficiaryAccountNumber,
+        ];
+        Log::info($body);
+    }
+   
+    return httpPostRequest2($url, $body, $header);
+}
+
+
+function validateAccountName($request, $baseUrl)
+{
     $header = env('CRUST_HEADER');
-    $url = "{$baseUrl}/api/debit";
+    $url = "{$baseUrl}/api/resolve-account-name";
     $body = [
-        'amount' => $request->amount,
-        'narration' => $request->narration,
-        'bankCode' => $request->beneficiaryBankCode,
-        'accountNumber' => $request->beneficiaryAccountNumber,
+        'accountnumber' => $request->beneficiaryAccountNumber,
+        'bankcode' => $request->beneficiaryBankCode
     ];
     return httpPostRequest2($url, $body, $header);
 }
+// {
+//     "accountName": "Greg Okenyi Omebije",
+//     "accountNumber": "0125594645",
+//     "amount": 25,
+//     "bankCode": "058",
+//     "narration": "Some payment"
+//   }
+
+//   {
+//     "sender": "ray@lemoniafrica.com",
+//     "amount": "10.5",
+//     "narration": "Pay Gbedu",
+//     "beneficiaryBankCode": "058",
+//     "beneficiaryAccountNumber": "0125594645"
+// }
 
 function getAccountName($request, $baseUrl)
 {
