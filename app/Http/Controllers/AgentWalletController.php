@@ -7,10 +7,12 @@ use App\Http\Requests\AlertRequest;
 use App\Http\Requests\ChakraCallBackRequest;
 use App\Http\Requests\CreateWalletRequest;
 use App\Http\Requests\CrustCallBackRequest;
+use App\Http\Requests\MerchantCredRequest;
 use App\Http\Requests\MerchantPayRequest;
 use App\Http\Requests\NumeroAccountCreationRequest;
 use App\Models\Inflow;
 use App\Models\MerchantBalance;
+use App\Models\MerchantCred;
 use App\Models\Wallet;
 use Carbon\Carbon;
 use gender;
@@ -57,7 +59,7 @@ class AgentWalletController extends Controller
                 $this->response->responseCode = '0';
                 $this->response->message = $data['responseMessage'];
                 $this->response->isSuccessful = true;
-                $this->response->data = $data['data'];
+                // $this->response->data = $data['data'];
                 Log::info('response gotten after creation of wallet' .json_encode($this->response));
                 return response()->json($this->response, 200);
 
@@ -76,6 +78,47 @@ class AgentWalletController extends Controller
         }
     }
 
+    public function credential(MerchantCredRequest $request)
+    {
+        try {
+            Log::info('**********Credential Reset Chakra service *************');
+            Log::info($request->all());
+            $data = chakraCredReset($this->baseUrl, $request);
+            Log::info('data gotten ' .$data);
+        if ($data['responseCode'] === "00") {
+            $merchCred = new MerchantCred();
+            // First check if merchantId is on db....
+            // if merchantId is on db update am 
+            $merchIdFromDb = $this->checkMerchantId($request->merchantId);
+            if (empty($merchIdFromDb)) {
+                $merchCred->AddMerchCred($data['data']);    
+            } 
+            if(!empty($merchIdFromDb)){
+                $merchCred->updateCred($merchIdFromDb, $data['data']);
+            }
+            $this->response->responseCode = '0';
+            $this->response->message = $data['responseMessage'];
+            $this->response->isSuccessful = true;
+            $this->response->data = $data['data'];
+            Log::info('response gotten ' . json_encode($this->response));
+            return response()->json($this->response, 200);
+        }
+        $this->response->responseCode = '1';
+        $this->response->message = $data['responseMessage'] ?? "Failed";
+        $this->response->isSuccessful = false;
+        // $this->response->data = $data['data'];
+        Log::info('response gotten ' . json_encode($this->response));
+        return response()->json($this->response, 400);
+        } catch (\Exception $e) {
+            $this->response->message = 'Processing Failed, Contact Support';
+            Log::info(json_encode($e));
+            $this->response->error = $e->getMessage();
+            return response()->json($this->response, 500);
+        }
+
+    }
+
+    //   }
     public function getMerchantPeer(MerchantPayRequest $request)
     {
         Log::info('************ get peer wallet endpoint ***************');
@@ -372,6 +415,11 @@ class AgentWalletController extends Controller
     public static function checkAccountNumber($accountNumber)
     {
         return MerchantBalance::where('accountNumber', $accountNumber)->first();
+    }
+
+    public static function checkMerchantId($merchId)
+    {
+        return MerchantCred::where('merchantId', $merchId)->first();
     }
     
 }

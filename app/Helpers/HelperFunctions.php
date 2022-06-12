@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Inflow;
+use App\Models\MerchantCred;
 use App\Models\Wallet;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
@@ -94,7 +95,7 @@ function getToken (){
     $baseUrl = env('BASE_URL');
     $url = "{$baseUrl}/credentials/get-token";
     $merchantId = env('MERCHANT_ID');
-    $apiKey = env('API_KEY');
+    $apiKey = getApiKeyChakra($merchantId);
     $body = [
         'merchantId' => $merchantId,
         'apiKey' => $apiKey,
@@ -110,7 +111,7 @@ function getToken (){
 function base64ChakraCred()
 {
     $merchantId = env('MERCHANT_ID');
-    $apiKey = env('API_KEY');
+    $apiKey = getApiKeyChakra($merchantId);
     $base_string = base64_encode("{$merchantId}" . ":" . "{$apiKey}"); //for base64 encoding
     // Log::info($base_string);
     return $base_string;//for base64 decoding
@@ -414,6 +415,23 @@ function getMerchantPeer($baseUrl)
     return Http::withHeaders([
         'Authorization' => $header[0]
     ])->get($url);
+}
+
+function chakraCredReset($baseUrl, $request)
+{
+    $url = "{$baseUrl}/credentials/reset";
+    $body = [
+        'merchantId' => $request->merchantId,
+    ];
+    return Http::post($url, $body);
+}
+
+function getApiKeyChakra($merchId)
+{
+    $data = MerchantCred::where('merchantId', $merchId)->first();
+    // Log::info($data);
+    // Log::info($data->apiKey);
+    return $data->apiKey;
 }
 
 function getMerchantBalance($baseUrl)

@@ -43,6 +43,7 @@ Route::group(array('prefix' => 'wallet' ), function () {
     Route::post('createWallet', [AgentWalletController::class, 'createWallet']);
     Route::post('getWallet', [AgentWalletController::class, 'getMerchantPeer']);
     Route::get('getMerchantBalance', [AgentWalletController::class, 'getMerchantBalance']);
+    Route::post('credentialReset', [AgentWalletController::class, 'credential']);
     Route::post('fundingCallBack', [AgentWalletController::class, 'fundingCallBack']);
     Route::post('callBackCrust', [AgentWalletController::class, 'fundingCrustCallBack']);
     Route::post('alert', [AgentWalletController::class, 'alertUrl']);
