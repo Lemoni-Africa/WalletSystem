@@ -417,6 +417,20 @@ function getMerchantPeer($baseUrl)
     ])->get($url);
 }
 
+
+function getBanksChakra($baseUrl)
+{
+    $base64Cred = base64ChakraCred();
+    $header = createHeaders();
+    Log::info($base64Cred);
+    $url = "{$baseUrl}/payout-default/bank-list?chakra-credentials={$base64Cred}";
+
+    
+    return Http::withHeaders([
+        'Authorization' => $header[0]
+    ])->get($url);
+}
+
 function chakraCredReset($baseUrl, $request)
 {
     $url = "{$baseUrl}/credentials/reset";
@@ -426,11 +440,23 @@ function chakraCredReset($baseUrl, $request)
     return Http::post($url, $body);
 }
 
+
+function accountEnquiryChakra($request, $baseUrl)
+{
+    $base64Cred = base64ChakraCred();
+    $header = createHeaders();
+    $url = "{$baseUrl}/payout-default/make-enquiry?chakra-credentials={$base64Cred}";
+    $body = [
+        'bankCode' => $request->bankcode,
+        'accountNumber' => $request->accountnumber
+    ];
+
+    return httpPostRequest($url, $body, $header);
+}
+
 function getApiKeyChakra($merchId)
 {
     $data = MerchantCred::where('merchantId', $merchId)->first();
-    // Log::info($data);
-    // Log::info($data->apiKey);
     return $data->apiKey;
 }
 
