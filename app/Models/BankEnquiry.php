@@ -12,8 +12,8 @@ class BankEnquiry extends Model
 
     public function addAccountDetailsChakra($data) 
     {
-        $this->account_number = $data['amount'];
-        $this->account_name = $data['amount'];
+        $this->account_number = $data['accountNumber'];
+        $this->account_name = $data['accountName'];
         $this->provider = Providers::CHAKRA->value;
         $this->save();
         return $this;

@@ -243,19 +243,10 @@ class BankListController extends Controller
                     $bankDetails = $data['data'];
                     $bankModel = new BankEnquiry();
                     $fromDb = $this->checkBankDetails($bankDetails['accountNumber'], $bankDetails['accountName']);
+  
                     if (empty($fromDb)) {
                         if ($data['responseCode'] === "00") {
-                            // $bankDetails = $data['data'];
-                            // $encodedJson = $bank; 
-                            // var_dump($bankDetails);
-                            // $data_array = [];
-                            // foreach($bankDetails as $service){
-                            //     $account_name = $service['accountName'];
-                            //     $account_number = $service->accountNumber;
-                            //     $data = array('account_name' => $account_name, 'account_number' => $account_number);
-                            //     array_push($data_array,$data);
-                            // }
-                            $savedModel = $bankModel->addAccountDetailsChakra($data['data']);
+                            $savedModel = $bankModel->addAccountDetailsChakra($bankDetails);
                             $this->response->responseCode = '0';
                             $this->response->message = $data['responseMessage'];
                             $this->response->isSuccessful = true;
@@ -272,7 +263,7 @@ class BankListController extends Controller
                     $this->response->responseCode = '0';
                     $this->response->message = 'Successful';
                     $this->response->isSuccessful = true;
-                    $this->response->data = $fromDb;
+                    $this->response->data = new BankDetailsResource($fromDb);
                     Log::info('response gotten ' .json_encode($this->response));
                     return response()->json($this->response, 200);
                    
