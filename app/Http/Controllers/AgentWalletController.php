@@ -65,7 +65,7 @@ class AgentWalletController extends Controller
 
             }
             $this->response->responseCode = '2';
-            $this->response->message = $data['responseMessage'];
+            $this->response->message = $data['responseMessage'] ?? $data['responseDescription'];
             $this->response->isSuccessful = true;
             Log::info('response gotten after creation of wallet' .json_encode($this->response));
             return response()->json($this->response, 200);

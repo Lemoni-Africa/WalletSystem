@@ -24,14 +24,15 @@ class CreateWalletRequest extends FormRequest
     public function rules()
     {
         return [
-            'firstName' => 'required',
-            'lastName' => 'required',
-            'middleName' => 'required',
-            'phoneNumber' => 'required|string|unique:wallets,phoneNumber',
-            // 'email' => 'required|string|unique:wallet,email',
-            'email' => 'required|string|unique:wallets,email',
-            'gender' => 'required',
-            'dob' => 'required|date_format:Y-m-d',
+            // 'firstName' => 'required',
+            // 'lastName' => 'required',
+            // 'middleName' => 'required',
+            // // 'phoneNumber' => 'required|string|unique:wallets,phoneNumber',
+            // 'phoneNumber' => 'required|string|',
+            // // 'email' => 'required|string|unique:wallet,email',
+            // 'email' => 'required|string|unique:wallets,email',
+            // 'gender' => 'required',
+            // 'dob' => 'required|date_format:Y-m-d',
 
         ];
     }

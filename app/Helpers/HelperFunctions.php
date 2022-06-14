@@ -4,6 +4,7 @@ use App\Models\Inflow;
 use App\Models\MerchantCred;
 use App\Models\Wallet;
 use Carbon\Carbon;
+use Faker\Factory;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
@@ -379,6 +380,42 @@ function createChakraWallet($request, $baseUrl, $pin)
     ];
 
     return httpPostRequest($url, $body, $header);
+}
+
+function walletCreationChakra($baseUrl, $pin)
+{
+    $base64Cred = base64ChakraCred();
+    $header = createHeaders();
+    $url = "{$baseUrl}/agent-wallet/create-wallet?chakra-credentials={$base64Cred}";
+    $faker = Factory::create();
+    
+    $body = [
+        'firstName' => "Rayasom",
+        'lastName' => "Services",
+        'middleName' => " ",
+        'phoneNumber' => $faker->randomElement(['080', '081','090','070', '091', '071']) . $faker->numberBetween(62345678,97866898),
+        'email' => $faker->email,
+        'walletType' => "3",
+        'channel' => "3",
+        'gender' => $faker->randomElement(['1', '2']),
+        'dob' =>  $faker->dateTimeBetween('1980-01-01', '2002-12-31')->format('Y-m-d'),
+        'pin' => $pin,
+        // 'date_of_birth' =>
+    ];
+    Log::info('body ' . json_encode($body));
+    // storeWalletChakra()
+
+    $result = httpPostRequest($url, $body, $header);
+    return array($body,$result);
+}
+
+function storeWalletChakra($data, $request, $pin)
+{
+    // $pin = generateRandomString();
+    $encryptedPin = encryptPin($pin);
+    Log::info('************ save to database ***************');
+    $wallet = new Wallet();
+    return $wallet->AddWalletChakra($data, $request, $encryptedPin);
 }
 
 function generateRandomString($length = 4) {
