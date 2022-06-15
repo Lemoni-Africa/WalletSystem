@@ -23,7 +23,7 @@ Route::group(array('prefix' => 'auth' ), function () {
 });
 
  
-Route::middleware(['ipChecker'])->group(function () {
+// Route::middleware(['ipChecker'])->group(function () {
     Route::group(array('prefix' => 'payout' ), function () {
         Route::post('quick', [PayOutController::class, 'quickPay']);
         Route::post('quickCrust', [PayOutController::class, 'quickPayCrust']);
@@ -51,7 +51,7 @@ Route::middleware(['ipChecker'])->group(function () {
         Route::post('alert', [AgentWalletController::class, 'alertUrl']);
         Route::post('createNumeroAccount', [AgentWalletController::class, 'createVirtualAccountNumero']);
     });
-});
+// });
 
 
 
