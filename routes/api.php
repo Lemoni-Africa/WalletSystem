@@ -46,6 +46,7 @@ Route::middleware(['ipChecker'])->group(function () {
         Route::get('getMerchantBalance', [AgentWalletController::class, 'getMerchantBalance']);
         Route::post('credentialReset', [AgentWalletController::class, 'credential']);
         Route::post('fundingCallBack', [AgentWalletController::class, 'fundingCallBack']);
+        Route::post('payoutCallBackChakra', [AgentWalletController::class, 'payoutChakraCallBack']);
         Route::post('callBackCrust', [AgentWalletController::class, 'fundingCrustCallBack']);
         Route::post('alert', [AgentWalletController::class, 'alertUrl']);
         Route::post('createNumeroAccount', [AgentWalletController::class, 'createVirtualAccountNumero']);

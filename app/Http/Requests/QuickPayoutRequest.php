@@ -24,10 +24,11 @@ class QuickPayoutRequest extends FormRequest
     public function rules()
     {
         return [
-            'sender' => 'required',
+            'customerId' => 'required',
             'amount' => 'required',
             'beneficiaryBankCode' => 'required',
             'beneficiaryAccountNumber' => 'required',
+            'callbackUrl' => 'required',
         ];
     }
 }

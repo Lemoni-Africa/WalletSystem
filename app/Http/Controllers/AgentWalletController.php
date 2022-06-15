@@ -10,9 +10,11 @@ use App\Http\Requests\CrustCallBackRequest;
 use App\Http\Requests\MerchantCredRequest;
 use App\Http\Requests\MerchantPayRequest;
 use App\Http\Requests\NumeroAccountCreationRequest;
+use App\Http\Requests\PayoutChakraRequest;
 use App\Models\Inflow;
 use App\Models\MerchantBalance;
 use App\Models\MerchantCred;
+use App\Models\Payout;
 use App\Models\Wallet;
 use Carbon\Carbon;
 use gender;
@@ -308,6 +310,75 @@ class AgentWalletController extends Controller
             return response()->json($this->response, 500);
         }
     }
+
+
+    public function payoutChakraCallBack(PayoutChakraRequest $request)
+    {
+        try {
+            Log::info('********** callback Chakra *****');
+            Log::info($request->all());
+            if ($request->hasHeader('x-payout-signature')) {
+                $payoutSignature = $request->header('x-payout-signature');
+                $request->headers->set('Content-Type', 'application/json');
+                // $jsonEncodedPayload = json_encode($request->all());
+                $hashedPayload = hash_hmac("sha512", json_encode($request->all()) , $this->callBackSecret);
+                Log::info($hashedPayload);
+                if($hashedPayload != $payoutSignature)
+                {
+                    $this->response->responseCode = '1';
+                    $this->response->message = "Invalid Signature"; 
+                    Log::info('response gotten ' .json_encode($this->response));                   
+                    return response()->json($this->response, 401);
+                }else{
+                    $payout = new Payout();
+                    $fromDb = findPayoutByReference($request->paymentRef,$request->beneficiaryAccountNumber);
+                    // Log::info('check if its on database ' .$fromDb);
+                    if (!empty($fromDb)) {
+                        if ($request->success) {
+                            //update DB to be successful
+                            Log::info('****Transaction was successful****');
+                            $payout->UpdateSuccessfulPayOut($fromDb, $request);
+                            // $response = postToIndiansPayout($request, $fromDb['customerId'], $fromDb['callback_url']);
+                            // Log::info('************response from application from indians ************' .  $response);
+                            // $payout->saveResponse($response, $fromDb);
+                            return  response([
+                                'responseCode' => "00",
+                                'responseMessage' => "Callback received"
+                            ], 200);
+                            } else {
+                                Log::info('****Transaction failed ****');
+                                $payout->UpdateFailedPayOut($fromDb, $request);
+                                // $response = postToIndiansPayout($request, $fromDb['customerId'], $fromDb['callback_url']);
+                                // Log::info('************response from application from indians ************' .  $response);
+                                // $payout->saveResponse($response, $fromDb);
+                                return  response([
+                                    'responseCode' => "00",
+                                    'responseMessage' => "Callback received"
+                                ], 200);
+                            }
+                    } else {
+                        return  response([
+                            'responseCode' => "1",
+                            'responseMessage' => "Not Found"
+                        ], 400);
+                    } 
+                }             
+            }else{
+                $this->response->responseCode = '1';
+                $this->response->message = "Invalid Signature";  
+                Log::info('response gotten ' .json_encode($this->response));                   
+                return response()->json($this->response, 401);
+            }
+            
+            
+        } catch (\Exception $e) {
+            $this->response->message = 'Processing Failed, Contact Support';
+            Log::info(json_encode($e));
+            $this->response->error = $e->getMessage();
+            return response()->json($this->response, 500);
+        }
+    }
+
 
 
     public function fundingCrustCallBack(CrustCallBackRequest $request)

@@ -97,7 +97,7 @@ class Payout extends Model
     }
 
 
-    public function AddPayOut($data) 
+    public function AddPayOut($data, $request) 
     {
         $this->requestId = $data['requestId'];
         $this->merchantReference = $data['data']['merchantReference'];
@@ -126,29 +126,55 @@ class Payout extends Model
         $this->responseTime = $data['data']['responseTime'];
         $this->provider = Providers::CHAKRA->value;
         $this->transactionStatus = TransactionStatus::PENDING->value;
+        $this->callback_url = $request->callbackUrl;
+        $this->customerId = $request->customerId;
         $this->save();
 
         return $this;
     }
-
-
-    public function UpdateSuccessfulPayOut($data) 
+   
+    public function UpdateSuccessfulPayOut($fromDb, $request) 
     {
-        $this->creditProcessed = $data['data']['creditProcessed'];
-        $this->transferStatus = $data['data']['transferStatus'];
-        $this->transactionStatus = TransactionStatus::COMPLETED->value;
-        $this->save();
-        return $this;
+        $fromDb->action = $request->action;
+        $fromDb->narration_call_back = $request->narration;
+        $fromDb->srcAccountName_call_back = $request->srcAccountName;
+        $fromDb->srcAccountNumber_call_back = $request->srcAccountNumber;
+        $fromDb->success = $request->success;
+        $fromDb->beneficiaryAccountName_call_back = $request->beneficiaryAccountName;
+        $fromDb->beneficiaryAccountNumber_call_back = $request->beneficiaryAccountNumber;
+        $fromDb->amount_call_back = $request->amount;
+        // $fromDb->walletAccountNumber = $request->walletAccountNumber;
+        $fromDb->creditProcessed = true;
+        $fromDb->transferStatus =TransactionStatus::COMPLETED->value;
+        $fromDb->transactionStatus = TransactionStatus::COMPLETED->value;
+        $fromDb->save();
+        return $fromDb;
     }
 
-    public function UpdateFailedPayOut($data) 
+    public function UpdateFailedPayOut($fromDb, $request) 
     {
-        $this->creditProcessed = $data['data']['creditProcessed'];
-        $this->transferStatus = $data['data']['transferStatus'];
-        $this->markedForReversal = $data['data']['markedForReversal'];
-        $this->reversed = $data['data']['reversed'];
-        $this->transactionStatus = TransactionStatus::FAILED->value;
-        $this->save();
-        return $this;
+        $fromDb->action = $request->action;
+        $fromDb->narration_call_back = $request->narration;
+        $fromDb->srcAccountName_call_back = $request->srcAccountName;
+        $fromDb->srcAccountNumber_call_back = $request->srcAccountNumber;
+        $fromDb->success = $request->success;
+        $fromDb->beneficiaryAccountName_call_back = $request->beneficiaryAccountName;
+        $fromDb->beneficiaryAccountNumber_call_back = $request->beneficiaryAccountNumber;
+        $fromDb->amount_call_back = $request->amount;
+
+        $fromDb->creditProcessed = false;
+        $fromDb->transferStatus = TransactionStatus::FAILED->value;
+        $fromDb->markedForReversal = true;
+        $fromDb->reversed = true;
+        $fromDb->transactionStatus = TransactionStatus::FAILED->value;
+        $fromDb->save();
+        return $fromDb;
+    }
+
+    public function saveResponse($response, $fromDb)
+    {
+        $fromDb->application_response = $response;
+        $fromDb->save();
+              
     }
 }

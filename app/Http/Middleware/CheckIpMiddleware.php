@@ -9,10 +9,13 @@ use Illuminate\Support\Facades\Log;
 class CheckIpMiddleware
 {
     public $whiteIps;
+    public $host;
     public $baseUrl;
+    public $hostBaseUrl;
     public function __construct()
     {
         $this->baseUrl = env('WHITE_IPS');
+        $this->hostBaseUrl = env('HOST');
     }
    
     /**
@@ -25,13 +28,19 @@ class CheckIpMiddleware
     public function handle($request, Closure $next)
     {
         $this->whiteIps = explode(',', $this->baseUrl);
-        Log::info($this->whiteIps);
-        if (!in_array($request->ip(), $this->whiteIps)) {
+        $this->host = explode(',', $this->hostBaseUrl);
+
+        $getHost = request()->getHost();
+        Log::info($request->ip());
+        Log::info($request->getHost());
+        if (!in_array($request->ip(), $this->whiteIps) && !in_array(request()->getHost(),$this->host)) {
 
             /*
                  You can redirect to any error page.
             */
-            return response()->json(['Your not allowed to access this resource'], 403);
+            Log::info('Rejected IP ' . $request->ip());
+            Log::info('Rejected HOST ' . $request->getHost());
+            return response()->json(["You're not allowed to access this resource"], 403);
         }
         return $next($request);
     }

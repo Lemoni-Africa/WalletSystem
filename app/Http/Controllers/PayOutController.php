@@ -50,56 +50,30 @@ class PayOutController extends Controller
                     Log::info('data gotten' .$data);
                     if ($data['responseCode'] == "00") {
                         $payout = new Payout();
-                        $result = $payout->AddPayOut($data);
+                        $result = $payout->AddPayOut($data, $request);
                         Log::info(json_encode($result));
-                        sleep(30);
-                        $getStatus = $this->checkStatus($result->transactionId);
-                        Log::info('check status of payout '.$getStatus);
-                        if ($getStatus['data']['transferStatus'] === "SUCCESSFUL") {
-                            Log::info('Payout was successful');
-                            $payout->UpdateSuccessfulPayOut($getStatus);
-                            $response['responseCode'] = '0';
-                            $response['message'] = $getStatus['data']['creditProcessedStatus'];
-                            $response['isSuccess'] = true;
-                            $response['data'] = [
-                                'transactionRef' => $data['data']['merchantReference']
-                            ];
-                            Log::info('response gotten ' .json_encode($response));
-                            return response()->json($response, 200);
-                        }
-                        Log::info('check status of payout '.$getStatus);
-                        $payout->UpdateFailedPayOut($getStatus);
-                        Log::info('Payout was unsuccessful');
-                        $response['responseCode'] = '1';
-                        $response['message'] =   $getStatus['data']["creditProcessedStatus"] ?? "Failed";
-                        $response['isSuccess'] = false;
-                        $response['data'] = [
+                        $this->response->responseCode = '0';
+                        $this->response->message = $data['responseMessage'];
+                        $this->response->isSuccessful = true;
+                        $this->response->data = [
                             'transactionRef' => $data['data']['merchantReference']
                         ];
-                        Log::info('response gotten ' .json_encode($response));
-                        return response()->json($response, 400);
+                        Log::info('response gotten ' .json_encode($this->response));
+                        return response()->json($this->response, 200);
                         
                     }
-                    if ($data['responseCode'] == "51") {
-                        $response['responseCode'] = '2';
-                        $response['message'] = $data['responseDescription'];
-                        $response['isSuccess'] = false;
-                        Log::info('response gotten ' .json_encode($response));
-                        return response()->json($response, 400);
-                    }
                     $response['responseCode'] = '2';
-                    $response['message'] = $data['responseMessage'];
+                    $response['message'] = $data['responseMessage'] ??  $data['responseDescription'];
                     $response['isSuccess'] = false;
                     Log::info('response gotten ' .json_encode($response));
                     return response()->json($response, 400);
         
                 } catch (\Exception $e) {
-                    return response([
-                        'isSuccesful' => false,
-                        'message' => 'Processing Failed, Contact Support',
-                        Log::info(json_encode($e)),
-                        'error' => $e->getMessage()
-                    ]);
+                    Log::info(json_encode($e));
+                    $this->response->message = 'Processing Failed, Contact Support';
+                    $this->response->error = $e->getMessage();
+                    Log::info('response gotten ' .json_encode($this->response));
+                    return response()->json($this->response, 500);
                 }
                 break;
             case 'NUMERO':
@@ -180,27 +154,6 @@ class PayOutController extends Controller
             default:
                 break;
         }
-        
-// {
-//     "success": true,
-//     "message": "Transfer Queued Successfully",
-//     "data": {
-//         "transactionNumber": "TMoni484786|20220609202713",
-//         "amount": 10.5,
-//         "charges": 25.0,
-//         "commission": 0.0,
-//         "type": "Transfer",
-//         "status": "Successful",
-//         "service": "Fund Transfer",
-//         "narration": "Sent 10.5 to 0125594645",
-//         "dateCreated": "2022-06-09T20:27:13.718+0000",
-//         "recipientName": "Lemoni Parent Account (058)",
-//         "recipientAccount": "0125594645",
-//         "recipientPhone": "",
-//         "initBalance": 2904.5,
-//         "balance": 2869.0
-//     }
-// }
         
         
     }
@@ -347,7 +300,7 @@ class PayOutController extends Controller
                return Log::info($data);
 
                 $payout = new Payout();
-                $result = $payout->AddPayOut($data);
+                $result = $payout->AddPayOut($data, $request);
                 return Log::info(json_encode($result));
                 // sleep(25);
                 $getStatus = $this->checkStatus($result->transactionId);

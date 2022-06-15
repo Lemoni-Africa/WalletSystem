@@ -27,12 +27,17 @@ class ChakraWallet extends Command
      */
     public function handle()
     {
-        $baseUrl = env('BASE_URL');
-        $count = $this->argument('count');
-        for ($i=0; $i < $count ; $i++) { 
-            $pin = generateRandomString();
-            list($request, $data) = walletCreationChakra($baseUrl, $pin);
-            storeWalletChakra($data, $request, $pin);
+        try {
+            $baseUrl = env('BASE_URL');
+            $count = $this->argument('count');
+            for ($i=0; $i < $count ; $i++) { 
+                $pin = generateRandomString();
+                list($request, $data) = walletCreationChakra($baseUrl, $pin);
+                storeWalletChakra($data, $request, $pin);
+            }
+        } catch (\Exception $e) {
+            //throw $th;
         }
+        
     }
 }

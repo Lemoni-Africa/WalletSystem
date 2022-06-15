@@ -2,6 +2,7 @@
 
 use App\Models\Inflow;
 use App\Models\MerchantCred;
+use App\Models\Payout;
 use App\Models\Wallet;
 use Carbon\Carbon;
 use Faker\Factory;
@@ -114,7 +115,7 @@ function base64ChakraCred()
     $merchantId = env('MERCHANT_ID');
     $apiKey = getApiKeyChakra($merchantId);
     $base_string = base64_encode("{$merchantId}" . ":" . "{$apiKey}"); //for base64 encoding
-    // Log::info($base_string);
+    Log::info($base_string);
     return $base_string;//for base64 decoding
 }
 
@@ -148,12 +149,14 @@ function postJsonRequest2($url, $body)
 
 function httpPostRequest($url, $body, $auth)
 {
+    Log::info($auth);
     $data = Http::withHeaders([
         'Content-Type' => 'application/json',
         'accept' => 'application/json',
         'Authorization' => $auth[0]
+        
     ])->post($url, $body);
-
+    
     return $data;
 }
 
@@ -174,7 +177,9 @@ function chakraPayOut($request, $baseUrl)
     $merchantRef = generateMerchantRef();
     $url = "{$baseUrl}/payout-default/quick-pay?chakra-credentials={$base64Cred}";
     //check if wallet is on db
-    $walletFromDb = Wallet::where('email', $request->sender)->first();
+    // $walletFromDb = Wallet::where('email', $request->sender)->first();
+    $walletFromDb = Wallet::inRandomOrder()->first();
+    Log::info('random email found'  .  $walletFromDb->email);
     if(!empty($walletFromDb)){
         $pin = decryptPin($walletFromDb['pin']);
     }
@@ -184,7 +189,7 @@ function chakraPayOut($request, $baseUrl)
     // get the password and decrpty
     $body = [
         'merchantRef' => $merchantRef,
-        'sender' => $request->sender,
+        'sender' => $walletFromDb->email,
         'amount' => $request->amount,
         'narration' => "Transaction " . $merchantRef,
         'pin' => $pin,
@@ -406,7 +411,11 @@ function walletCreationChakra($baseUrl, $pin)
     // storeWalletChakra()
 
     $result = httpPostRequest($url, $body, $header);
-    return array($body,$result);
+    if ($result['responseCode'] == "00") {
+        Log::info('***********data from chakra ******  ' . $result);
+        return array($body,$result);
+    }
+    
 }
 
 function storeWalletChakra($data, $request, $pin)
@@ -415,6 +424,7 @@ function storeWalletChakra($data, $request, $pin)
     $encryptedPin = encryptPin($pin);
     Log::info('************ save to database ***************');
     $wallet = new Wallet();
+    Log::info('***********data******  '. $data);
     return $wallet->AddWalletChakra($data, $request, $encryptedPin);
 }
 
@@ -516,6 +526,12 @@ function findInFlowbyReference($reference,$walletNumber)
     return Inflow::where('reference', $reference)->where('accountNumber', $walletNumber)->where('status', TransactionStatus::PENDING->value)->first();
 }
 
+function findPayoutByReference($reference,$beneficaryAccount)
+{
+    return Payout::where('merchantReference', $reference)->where('beneficiaryAccountNumber', $beneficaryAccount)->where('transactionStatus', TransactionStatus::PENDING->value)->first();
+}
+
+
 
 //find infiow here referece, wallter number, status pending
 
@@ -544,6 +560,24 @@ function postToIndians($request, $id, $url)
         'customerId' => $id,
         'reference' => $request->reference,
         'amount' => $request->creditAmount,
+        'success' => $request->success
+    ];
+    Log::info('****************** Indian Body ********************');
+    Log::info(json_encode($body));
+    // Log::info($body);
+    $hashedPayload = hash_hmac("sha512", json_encode($body) , $callBackSecret);
+    Log::info($hashedPayload);
+    return httpPostRequestCallback($url, $body, $hashedPayload);
+}
+
+function postToIndiansPayout($request, $id, $url)
+{
+    
+    $callBackSecret = env('INDIAN_SECRET');
+    $body = [
+        'customerId' => $id,
+        'reference' => $request->paymentRef,
+        'amount' => $request->amount,
         'success' => $request->success
     ];
     Log::info('****************** Indian Body ********************');
