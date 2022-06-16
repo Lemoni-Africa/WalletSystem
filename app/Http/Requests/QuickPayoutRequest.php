@@ -28,7 +28,8 @@ class QuickPayoutRequest extends FormRequest
             'amount' => 'required',
             'beneficiaryBankCode' => 'required',
             'beneficiaryAccountNumber' => 'required',
-            'callbackUrl' => 'required',
+            'reversalUrl' => 'required',
         ];
+          
     }
 }

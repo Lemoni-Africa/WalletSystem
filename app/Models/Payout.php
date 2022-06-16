@@ -126,8 +126,9 @@ class Payout extends Model
         $this->responseTime = $data['data']['responseTime'];
         $this->provider = Providers::CHAKRA->value;
         $this->transactionStatus = TransactionStatus::PENDING->value;
-        $this->callback_url = $request->callbackUrl;
+        // $this->callback_url = $request->callbackUrl;
         $this->customerId = $request->customerId;
+        $this->reversal_url = $request->reversalUrl;
         $this->save();
 
         return $this;

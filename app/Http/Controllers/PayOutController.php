@@ -204,6 +204,7 @@ class PayOutController extends Controller
                 'message' => null,
             ];
             $data = getStatus($this->baseUrl, $transactionId);
+            Log::info($data);
             if ($data['responseCode'] == "00") {
                 $response['responseCode'] = '0';
                 $response['message'] = $data['responseMessage'];
@@ -305,7 +306,7 @@ class PayOutController extends Controller
                 // sleep(25);
                 $getStatus = $this->checkStatus($result->transactionId);
                 if ($getStatus['data']['transferStatus'] === "SUCCESSFUL") {
-                    $payout->UpdateSuccessfulPayOut($getStatus);
+                    // $payout->UpdateSuccessfulPayOut($getStatus);
                     $response['responseCode'] = '0';
                     $response['message'] = $getStatus['data']['creditProcessedStatus'];
                     $response['isSuccess'] = true;
@@ -316,7 +317,7 @@ class PayOutController extends Controller
                     return response()->json($response, 200);
                 }
                 Log::info($getStatus);
-                $payout->UpdateFailedPayOut($getStatus);
+                // $payout->UpdateFailedPayOut($getStatus);
                 $response['responseCode'] = '1';
                 $response['message'] =   $getStatus['data']["creditProcessedStatus"];
                 $response['isSuccess'] = false;

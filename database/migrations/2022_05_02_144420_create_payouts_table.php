@@ -43,7 +43,11 @@ return new class extends Migration
             $table->string('transactionStatus');
             $table->string('provider');
             $table->string('customerId');
-            $table->string('callback_url')->nullable();
+            // $table->string('callback_url')->nullable();
+            $table->string('reversal_url')->nullable();
+            $table->string('amount_reversed_from_app')->nullable();
+            $table->boolean('was_reversed_from_app')->default(0);
+
             $table->string('action')->nullable();           
             $table->string('narration_call_back')->nullable();
             $table->string('srcAccountName_call_back')->nullable();
