@@ -22,12 +22,13 @@ Route::group(array('prefix' => 'auth' ), function () {
     Route::post('test', [AuthController::class, 'test']);
 });
 
- 
+
 // Route::middleware(['ipChecker'])->group(function () {
     Route::group(array('prefix' => 'payout' ), function () {
         Route::post('quick', [PayOutController::class, 'quickPay']);
+        Route::post('test', [PayOutController::class, 'test']);
         Route::post('quickCrust', [PayOutController::class, 'quickPayCrust']);
-        
+
         Route::get('status/{transactionId}', [PayOutController::class, 'payOutStatus']);
         Route::post('bankEnquiry', [PayOutController::class, 'makeEnquiry']);
         Route::get('transactions', [PayOutController::class, 'getTransactionList']);
@@ -39,7 +40,7 @@ Route::group(array('prefix' => 'auth' ), function () {
         Route::get('bankAccounts', [BankListController::class, 'getAccounts']);
         Route::post('getAccountName', [BankListController::class, 'getAccountName']);
     });
-    
+
     Route::group(array('prefix' => 'wallet' ), function () {
         Route::post('createWallet', [AgentWalletController::class, 'createWallet']);
         Route::post('getWallet', [AgentWalletController::class, 'getMerchantPeer']);

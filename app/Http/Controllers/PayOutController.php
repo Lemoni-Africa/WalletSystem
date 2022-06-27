@@ -22,7 +22,7 @@ class PayOutController extends Controller
     private $callBackSecret;
     private $response;
     private $provider;
-    private $baseNumeroUrl; 
+    private $baseNumeroUrl;
     public function __construct()
     {
         $this->baseUrl = env('BASE_URL');
@@ -60,14 +60,14 @@ class PayOutController extends Controller
                         ];
                         Log::info('response gotten ' .json_encode($this->response));
                         return response()->json($this->response, 200);
-                        
+
                     }
                     $response['responseCode'] = '2';
                     $response['message'] = $data['responseMessage'] ??  $data['responseDescription'];
                     $response['isSuccess'] = false;
                     Log::info('response gotten ' .json_encode($response));
                     return response()->json($response, 400);
-        
+
                 } catch (\Exception $e) {
                     Log::info(json_encode($e));
                     $this->response->message = 'Processing Failed, Contact Support';
@@ -154,8 +154,8 @@ class PayOutController extends Controller
             default:
                 break;
         }
-        
-        
+
+
     }
 
 
@@ -167,7 +167,7 @@ class PayOutController extends Controller
             $baseUrl = env('BASE_URL');
             $url = "{$this->baseUrl}/payout-default/get-payout-status?chakra-credentials={$base64Cred}&transactionId={$transactionId}";
 
-            
+
             $data = Http::withHeaders([
                 'Authorization' => $header[0]
             ])->get($url);
@@ -244,7 +244,7 @@ class PayOutController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
-        
+
     }
 
 
@@ -281,9 +281,9 @@ class PayOutController extends Controller
             $this->response->error = $e->getMessage();
             return response()->json($this->response, 500);
         }
-        
+
     }
-  
+
     public function numeroPayOut(QuickPayoutRequest $request)
     {
         try {
@@ -293,7 +293,7 @@ class PayOutController extends Controller
                 'data'=> null,
                 'message' => null,
             ];
-            
+
 
 
             $data = numeroPayOut($request, $this->baseNumeroUrl);
@@ -313,7 +313,7 @@ class PayOutController extends Controller
                     $response['data'] = [
                         'transactionRef' => $data['data']['merchantReference']
                     ];
-                    
+
                     return response()->json($response, 200);
                 }
                 Log::info($getStatus);
@@ -325,7 +325,7 @@ class PayOutController extends Controller
                     'transactionRef' => $data['data']['merchantReference']
                 ];
                 return response()->json($response, 200);
-                
+
             }
             $response['responseCode'] = '2';
             $response['message'] = $data['responseMessage'];
@@ -341,4 +341,24 @@ class PayOutController extends Controller
         }
     }
 
+
+    public function test(QuickPayoutRequest $request)
+    {
+        // Log::info($auth);
+        $token = env('token');
+        $body = [
+            "customerId" => $request->customerId,
+            "amount" => $request->amount,
+            "beneficiaryBankCode" => $request->beneficiaryBankCode,
+            "beneficiaryAccountNumber" => $request->beneficiaryAccountNumber,
+            "reversalUrl" => $request->reversalUrl,
+        ];
+        $data = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'accept' => 'application/json',
+            'Authorization' => 'Bearer ' . $token
+        ])->post('https://apigateway.myapiservices.net/lemoni-txn/api/payout/quick', $body);
+        Log::info($data);
+        return $data;
+    }
 }
