@@ -196,6 +196,7 @@ function chakraPayOut($request, $baseUrl)
         'beneficiaryBankCode' => $request->beneficiaryBankCode,
         'beneficiaryAccountNumber' => $request->beneficiaryAccountNumber,
     ];
+    Log::info(json_encode($body));
     return httpPostRequest($url, $body, $header);
     
 }

@@ -40,19 +40,22 @@ class PayOutController extends Controller
         switch ($this->provider) {
             case 'CHAKRA':
                 try {
-                    if ($this->env == 'TEST')
+                    if ($this->env === 'TEST')
                     {
                         $request->beneficiaryBankCode = "058";
                         $request->beneficiaryAccountNumber = "0125594645";
                     }
                     Log::info('**********PayOut from Chakra service *************');
                     Log::info($request->all());
+
                     $response = [
                         'isSuccess' =>  false,
                         'responseCode' => null,
                         'data'=> null,
                         'message' => null,
                     ];
+                    Log::info('Test data ' . $request->beneficiaryBankCode);
+                    Log::info('Test data ' . $request->beneficiaryAccountNumber);
                     $data = chakraPayOut($request, $this->baseUrl);
                     Log::info('data gotten' .$data);
                     if ($data['responseCode'] == "00") {
