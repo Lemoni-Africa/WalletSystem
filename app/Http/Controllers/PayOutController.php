@@ -77,8 +77,8 @@ class PayOutController extends Controller
                     }
                     $this->response->responseCode = '2';
                     $this->response->message = "Withrawal failed, try again later";
-                    Log::info('response gotten ' .json_encode($response));
-                    return response()->json($response, 400);
+                    Log::info('response gotten ' .json_encode($this->response));
+                    return response()->json($this->response, 400);
 
                 } catch (\Exception $e) {
                     Log::info(json_encode($e));
