@@ -40,11 +40,21 @@ class PayOutController extends Controller
         switch ($this->provider) {
             case 'CHAKRA':
                 try {
+                    // Log::info();
                     if ($this->env === 'TEST')
                     {
                         $request->beneficiaryBankCode = "058";
                         $request->beneficiaryAccountNumber = "0125594645";
                     }
+                    $amount = (double)$request->amount;
+                    $amount = round($amount, 2);
+                    $request->amount = strval($amount);
+                    Log::info('amount convert to double and rounded ' . $amount);
+                    // $amountArray = explode('.',$amount);
+                    // if ($amountArray[1] == '00') {
+                    //     $amount = $amountArray[0];
+                    //     Log::info($amount);
+                    // }
                     Log::info('**********PayOut from Chakra service *************');
                     Log::info($request->all());
 
