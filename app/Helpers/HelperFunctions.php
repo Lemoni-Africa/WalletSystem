@@ -570,6 +570,38 @@ function postToIndians($request, $id, $url)
     return httpPostRequestCallback($url, $body, $hashedPayload);
 }
 
+// function depositCallback(Request $request)
+// {   
+//     if ($request->hasHeader('x-funding')) {
+//         $payload = json_encode($request->all());
+//         $signature = $request->header('x-funding');
+//         $secret = env('secret');
+//         $hashedPayload = compute_hash($payload , $secret);
+//         if($hashedPayload != $signature)
+//         {
+//             'error'
+//         }
+//     }else {
+//         'error';
+//     }
+// }
+
+
+// function compute_hash($payload , $secret)
+// {
+//     $hashedPayload = hash_hmac("sha512", $payload , $secret);
+//     return $hashedPayload;
+// }
+
+// // function hash_is_valid($payload , $secret, $verify)
+// // {
+// //     $computed_hash = compute_hash($payload , $secret);
+// //     return $computed_hash;
+// // }
+ 
+
+
+
 function postToIndiansPayout($request, $id, $url)
 {
     

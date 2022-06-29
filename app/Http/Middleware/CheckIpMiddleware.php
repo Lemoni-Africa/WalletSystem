@@ -31,8 +31,8 @@ class CheckIpMiddleware
         $this->host = explode(',', $this->hostBaseUrl);
 
         $getHost = request()->getHost();
-        Log::info($request->ip());
-        Log::info($request->getHost());
+        Log::info('Incoming IP  ' . $request->ip());
+        Log::info('Incoming Host  ' . $request->getHost());
         if (!in_array($request->ip(), $this->whiteIps) && !in_array(request()->getHost(),$this->host)) {
 
             /*

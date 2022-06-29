@@ -22,6 +22,7 @@ class PayOutController extends Controller
     private $callBackSecret;
     private $response;
     private $provider;
+    private $env;
     private $baseNumeroUrl;
     public function __construct()
     {
@@ -29,6 +30,7 @@ class PayOutController extends Controller
         $this->baseCrustUrl = env('CRUST_BASE_URL');
         $this->callBackSecret = env('CALL_BACK_SECRET');
         $this->provider = env('PROVIDER');
+        $this->env = env('BANK_ENV');
         $this->baseNumeroUrl = env('NUMERO_BASE_URL');
         $this->response = new DefaultApiResponse();
     }
@@ -38,6 +40,11 @@ class PayOutController extends Controller
         switch ($this->provider) {
             case 'CHAKRA':
                 try {
+                    if ($this->env == 'TEST')
+                    {
+                        $request->beneficiaryBankCode = "058";
+                        $request->beneficiaryAccountNumber = "0125594645";
+                    }
                     Log::info('**********PayOut from Chakra service *************');
                     Log::info($request->all());
                     $response = [
@@ -63,7 +70,7 @@ class PayOutController extends Controller
 
                     }
                     $response['responseCode'] = '2';
-                    $response['message'] = $data['responseMessage'] ??  $data['responseDescription'];
+                    $response['message'] = "Withrawal failed, try again later";
                     $response['isSuccess'] = false;
                     Log::info('response gotten ' .json_encode($response));
                     return response()->json($response, 400);
