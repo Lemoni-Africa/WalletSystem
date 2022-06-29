@@ -57,13 +57,6 @@ class PayOutController extends Controller
                     // }
                     Log::info('**********PayOut from Chakra service *************');
                     Log::info($request->all());
-
-                    $response = [
-                        'isSuccess' =>  false,
-                        'responseCode' => null,
-                        'data'=> null,
-                        'message' => null,
-                    ];
                     Log::info('Test data ' . $request->beneficiaryBankCode);
                     Log::info('Test data ' . $request->beneficiaryAccountNumber);
                     $data = chakraPayOut($request, $this->baseUrl);
@@ -74,7 +67,7 @@ class PayOutController extends Controller
                         Log::info(json_encode($result));
                         $this->response->responseCode = '0';
                         $this->response->message = $data['responseMessage'];
-                        $this->response->isSuccessful = true;
+                        $this->response->isSuccess = true;
                         $this->response->data = [
                             'transactionRef' => $data['data']['merchantReference']
                         ];
@@ -82,9 +75,8 @@ class PayOutController extends Controller
                         return response()->json($this->response, 200);
 
                     }
-                    $response['responseCode'] = '2';
-                    $response['message'] = "Withrawal failed, try again later";
-                    $response['isSuccess'] = false;
+                    $this->response->responseCode = '2';
+                    $this->response->message = "Withrawal failed, try again later";
                     Log::info('response gotten ' .json_encode($response));
                     return response()->json($response, 400);
 

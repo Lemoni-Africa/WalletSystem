@@ -3,7 +3,7 @@
 namespace App\Contract\Responses;
 
 class DefaultApiResponse {
-    public $isSuccessful = false;
+    public $isSuccess = false;
     public $responseCode;
     public $data;
     public $message;
