@@ -350,10 +350,7 @@ class AgentWalletController extends Controller
                                 $payout->UpdateFailedPayOut($fromDb, $request);
                                 $response = postToIndiansPayout($request, $fromDb['customerId'], $fromDb['reversal_url']);
                                 Log::info('indian response' . $response);
-                                Log::info('code ' . $response->status() );
-                                // if ($response['']) {
-                                //     # code...
-                                // }
+                                Log::info('response code from indians' . $response->status() );
                                 $payout->updateForReversalChakra($fromDb, $response);
                                 Log::info('************response from application from indians ************' .  $response);
                                 $payout->saveResponse($response, $fromDb);

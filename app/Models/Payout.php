@@ -177,7 +177,7 @@ class Payout extends Model
     {
         $fromDb->isReversed = true;
         $fromDb->reversal_time = Carbon::now();
-        $fromDb->amount_reversed = $response->amountReversed;
+        $fromDb->amount_reversed = strval($response['amountReversed']);
         $fromDb->save();
     }
 
