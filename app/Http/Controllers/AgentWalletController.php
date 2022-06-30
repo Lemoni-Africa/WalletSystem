@@ -348,9 +348,15 @@ class AgentWalletController extends Controller
                             } else {
                                 Log::info('****Transaction failed ****');
                                 $payout->UpdateFailedPayOut($fromDb, $request);
-                                // $response = postToIndiansPayout($request, $fromDb['customerId'], $fromDb['callback_url']);
-                                // Log::info('************response from application from indians ************' .  $response);
-                                // $payout->saveResponse($response, $fromDb);
+                                $response = postToIndiansPayout($request, $fromDb['customerId'], $fromDb['reversal_url']);
+                                Log::info('indian response' . $response);
+                                Log::info('code ' . $response->status() );
+                                // if ($response['']) {
+                                //     # code...
+                                // }
+                                $payout->updateForReversalChakra($fromDb, $response);
+                                Log::info('************response from application from indians ************' .  $response);
+                                $payout->saveResponse($response, $fromDb);
                                 return  response([
                                     'responseCode' => "00",
                                     'responseMessage' => "Callback received"

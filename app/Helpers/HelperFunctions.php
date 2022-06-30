@@ -610,7 +610,7 @@ function postToIndiansPayout($request, $id, $url)
     $body = [
         'customerId' => $id,
         'reference' => $request->paymentRef,
-        'amount' => $request->amount,
+        'amount' =>  strval($request->amount),
         'success' => $request->success
     ];
     Log::info('****************** Indian Body ********************');

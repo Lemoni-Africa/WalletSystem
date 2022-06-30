@@ -45,8 +45,9 @@ return new class extends Migration
             $table->string('customerId');
             // $table->string('callback_url')->nullable();
             $table->string('reversal_url')->nullable();
-            $table->string('amount_reversed_from_app')->nullable();
-            $table->boolean('was_reversed_from_app')->default(0);
+            $table->string('amount_reversed')->nullable();
+            $table->boolean('isReversed')->default(0);
+            $table->string('reversal_time')->nullable();
 
             $table->string('action')->nullable();           
             $table->string('narration_call_back')->nullable();

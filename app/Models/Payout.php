@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Providers;
@@ -172,10 +173,17 @@ class Payout extends Model
         return $fromDb;
     }
 
+    public function updateForReversalChakra($fromDb, $response)
+    {
+        $fromDb->isReversed = true;
+        $fromDb->reversal_time = Carbon::now();
+        $fromDb->amount_reversed = $response->amountReversed;
+        $fromDb->save();
+    }
+
     public function saveResponse($response, $fromDb)
     {
         $fromDb->application_response = $response;
         $fromDb->save();
-              
     }
 }
