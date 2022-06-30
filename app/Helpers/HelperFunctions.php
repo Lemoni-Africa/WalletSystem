@@ -498,7 +498,7 @@ function accountEnquiryChakra($request, $baseUrl)
         'bankCode' => $request->bankcode,
         'accountNumber' => $request->accountnumber
     ];
-
+    Log::info('body ' . json_encode($body));
     return httpPostRequest($url, $body, $header);
 }
 

@@ -181,10 +181,10 @@ class BankListController extends Controller
             case 'CRUST':
                 try {
                     Log::info('********** Entering Crust validateAccountNumber ***********');
-                    if ($this->bankEnv === "TEST") {
-                        $request->accountnumber ="0125594645";
-                        $request->bankcode = "058";
-                    }
+                    // if ($this->bankEnv == "TEST") {
+                    //     $request->accountnumber ="0125594645";
+                    //     $request->bankcode = "058";
+                    // }
                     Log::info($request->all());
                     $data = getAccountName($request, $this->baseCrustUrl);
                     Log::info('data gotten ' .$data);
@@ -237,7 +237,19 @@ class BankListController extends Controller
             case 'CHAKRA':
                 try {
                     Log::info('********** Entering Chakra validateAccountNumber ***********');
+                    if ($this->bankEnv === 'TEST')
+                    {
+                        $request->accountnumber = "0125594645";
+                        $request->bankcode = "058";
+                    }
                     $data = accountEnquiryChakra($request, $this->baseUrlChakra);
+                    if ($data['responseCode'] != "00") {
+                        $this->response->responseCode = '0';
+                        $this->response->message = "Process Failed, Please try again!!";
+                        $this->response->isSuccessful = false;
+                        Log::info('response gotten ' .json_encode($this->response));
+                        return response()->json($this->response, 400);
+                    }
                     Log::info($request->all());
                     Log::info('data gotten ' .$data);
                     $bankDetails = $data['data'];
