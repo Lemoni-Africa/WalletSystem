@@ -275,6 +275,7 @@ function numeroCreateAccount($request, $baseUrl)
 function crustPayout($request, $baseUrl)
 {
     $data = validateAccountName($request, $baseUrl);
+    Log::info('validating account details ' . $data);
     if ($data['success']) {
         $name = $data['data']['account_name'];
         $header = env('CRUST_HEADER');
@@ -287,9 +288,10 @@ function crustPayout($request, $baseUrl)
             'accountNumber' => $request->beneficiaryAccountNumber,
         ];
         Log::info($body);
+        return httpPostRequest2($url, $body, $header);
     }
-   
-    return httpPostRequest2($url, $body, $header);
+    return $data;
+    // return httpPostRequest2($url, $body, $header);
 }
 
 

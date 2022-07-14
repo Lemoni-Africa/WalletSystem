@@ -404,16 +404,16 @@ class AgentWalletController extends Controller
                         'responseCode' => "00",
                         'responseMessage' => "Callback received"
                     ], 200);
-                    } else {
-                        Log::info('****Transaction failed ****');
-                        $inflow->updateFromCallBackForFailedCrustTransaction($fromDb, $request);
-                        $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
-                        Log::info('************response from application from indians ************' .  $response);
-                        $inflow->saveResponse($response, $fromDb);
-                        return  response([
-                            'responseCode' => "00",
-                            'responseMessage' => "Callback received"
-                        ], 200);
+                } else {
+                    Log::info('****Transaction failed ****');
+                    $inflow->updateFromCallBackForFailedCrustTransaction($fromDb, $request);
+                    $response = postToIndians($request, $fromDb['customerId'], $fromDb['callback_url']);
+                    Log::info('************response from application from indians ************' .  $response);
+                    $inflow->saveResponse($response, $fromDb);
+                    return  response([
+                        'responseCode' => "00",
+                        'responseMessage' => "Callback received"
+                    ], 200);
                 }
                 
             } else {

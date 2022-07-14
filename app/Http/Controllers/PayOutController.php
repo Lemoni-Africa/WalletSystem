@@ -135,17 +135,31 @@ class PayOutController extends Controller
                 break;
             case 'CRUST':
                 try {
+                    // if ($this->env === 'TEST')
+                    // {
+                    //     $request->beneficiaryBankCode = "058";
+                    //     $request->beneficiaryAccountNumber = "0125594645";
+                    // }
                     Log::info('**********PayOut from Crust service *************');
                     Log::info($request->all());
                     $data = crustPayout($request, $this->baseCrustUrl);
+                    Log::info('response gotten ' . $data);
+                    if ($data['message'] === "Invalid Bank")
+                    {
+                        $this->response->responseCode = '1';
+                        $this->response->message = "Invalid Account Name";
+                        $this->response->isSuccessful = false;
+                        Log::info('response gotten ' .json_encode($this->response));
+                        return response()->json($this->response, 400);
+                    }
                     $payout = new Payout();
-                    Log::info('***** data gotten ****' .$data);
+                    Log::info('***** data gotten ****' . $data);
                     if ($data['success'] && $data['data']['status']=="Successful") {
                         Log::info('Payout was successful');
                         $details = validateAccountName($request, $this->baseCrustUrl);
                         $result = $payout->AddPayOutCrust($data, $request, $details);
                         $this->response->responseCode = '0';
-                        $this->response->message = $data['message'];
+                        $this->response->message = "Transfer Successful";
                         $this->response->isSuccessful = true;
                         $this->response->data = [
                             'transactionRef' => $data['data']['transactionNumber']
@@ -157,12 +171,12 @@ class PayOutController extends Controller
                         return response()->json($this->response, 200);
                     }
                     Log::info('Payout was unsuccessful');
-                    $details = validateAccountName($request, $this->baseNumeroUrl);
+                    $details = validateAccountName($request, $this->baseCrustUrl);
                     $result = $payout->AddFailedPayOutCrust($data, $request, $details);
                     $this->response->responseCode = '1';
-                    $this->response->message = $data['message'];
+                    $this->response->message = "Withrawal failed, try again later";
                     $this->response->isSuccessful = false;
-                    $this->response->data = $data['data'];
+                    // $this->response->data = $data['data'];
                     Log::info('response gotten ' .json_encode($this->response));
                     return response()->json($this->response, 400);
                 } catch (\Exception $e)  {
