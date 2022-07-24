@@ -76,6 +76,8 @@ class Payout extends Model
         $this->narration = $data['data']['narration'];
         $this->provider = Providers::CRUST->value;
         $this->transactionStatus = TransactionStatus::FAILED->value;
+        $this->customerId = $request->customerId;
+        $this->reversal_url = $request->reversalUrl;
         $this->save();
 
         return $this;
