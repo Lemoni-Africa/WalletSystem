@@ -132,6 +132,7 @@ class AgentWalletController extends Controller
                     $request->amount = "100";
                     $walletGenerated = getMerchantPeer($this->baseUrl);
                     Log::info('data gotten ' .$walletGenerated);
+                    // 94029ab028","dateCreated":"2022-08-09T13:26:15.000+00:00"} 
                     if ($walletGenerated['success']){
                         $saveInflow = new Inflow();
                         $saveInflow->saveInFlowRequest($walletGenerated, $request); 
@@ -157,6 +158,7 @@ class AgentWalletController extends Controller
                     $this->response->message = 'Processing Failed, Contact Support';
                     Log::info(json_encode($e));
                     // $this->response->error = $e->getMessage();
+                    Log::info('response gotten ' . json_encode($this->response));
                     return response()->json($this->response, 500);
                 }
                 break;
@@ -255,6 +257,7 @@ class AgentWalletController extends Controller
                 // $jsonEncodedPayload = json_encode($request->all());
                 $hashedPayload = hash_hmac("sha512", json_encode($request->all()) , $this->callBackSecret);
                 Log::info($hashedPayload);
+                Log::info('payoutSignature ' . $payoutSignature);
                 if($hashedPayload != $payoutSignature)
                 {
                     $this->response->responseCode = '1';

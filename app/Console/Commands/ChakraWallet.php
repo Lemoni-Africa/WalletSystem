@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class ChakraWallet extends Command
 {
@@ -12,7 +13,7 @@ class ChakraWallet extends Command
      * @var string
      */
     protected $signature = 'cwallet {count=1}';
-
+    
     /**
      * The console command description.
      *
@@ -27,6 +28,7 @@ class ChakraWallet extends Command
      */
     public function handle()
     {
+        Log::info('ss');
         try {
             $baseUrl = env('BASE_URL');
             $count = $this->argument('count');
