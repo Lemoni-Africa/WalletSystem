@@ -176,7 +176,13 @@ class AgentWalletController extends Controller
                         $this->response->responseCode = '0';
                         $this->response->message = $data['message'];
                         $this->response->isSuccessful = true;
-                        $this->response->data = $data['data'];
+                        $this->response->data = [
+                            "accountNumber" => $data['data']['accountNumber'],
+                            "accountName" => $data['data']['accountName'],
+                            "reference" => $data['data']['transactionNumber'],
+                            "bankName" => $data['data']['bankName'],
+                            "bankCode" => $data['data']['bankCode']
+                        ];
                         Log::info('response gotten ' .json_encode($this->response));
                         return response()->json($this->response, 200);
         
